@@ -17,6 +17,7 @@ public class BookingDTO {
     private String status;//CONFIRMED, CANCELED
 
     public BookingDTO(long id, int customerId, int roomId, LocalDate checkInDate, LocalDate checkOuDate, long nights, double totalPrice, String status) {
+        System.out.println("Booking id: " + id);
         this.id = id;
         this.customerId = customerId;
         this.roomId = roomId;

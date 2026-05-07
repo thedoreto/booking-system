@@ -35,6 +35,7 @@ public class BookingController {
 
     @GetMapping("/bookings")
     public List<BookingDTO> getBookingByCustomer() {
+        System.out.println("Start get bookings");
         return hotelService.getAllBookings();
     }
 
