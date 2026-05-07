@@ -5,17 +5,17 @@ import com.hotel.model.Booking;
 import com.hotel.model.Customer;
 import com.hotel.model.Room;
 import com.hotel.model.enums.BookingStatus;
-import com.hotel.model.enums.RoomType;
 import com.hotel.repository.HotelRepositoty;
 import com.hotel.service.result.Result;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
 
-
+@Service
 public class HotelService {
     private HotelRepositoty repo;
-    private Map<Integer, List<Booking>> bookingsByRoomId  = new HashMap<>();;
+    private Map<Integer, List<Booking>> bookingsByRoomId  = new HashMap<>();
 
     public HotelService(HotelRepositoty repo) {
         this.repo = repo;
