@@ -10,4 +10,9 @@ public class TestController {
     public String test() {
         return "OK - Spring is running";
     }
+
+    @GetMapping("/test2")
+    public String test2() {
+        return "OK - Spring is running";
+    }
 }
