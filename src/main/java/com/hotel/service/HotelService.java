@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Service
 public class HotelService {
@@ -119,8 +120,12 @@ public class HotelService {
     }
 
     public List<BookingDTO> getAllBookings() {
-        return repo.getBookings().stream()
-                .map(b -> new BookingDTO(
+        System.out.println("start getAllBookings");
+        List<Booking> bookings = repo.getBookings();
+        System.out.println("start stream");
+        Stream<Booking> stream = bookings.stream();
+        System.out.println("start map");
+         List<BookingDTO> dto=  stream.map(b -> new BookingDTO(
                         b.getId(),
                         b.getCustomer().getId(),
                         b.getRoom().getId(),
@@ -130,5 +135,6 @@ public class HotelService {
                         b.getTotalPrice(),
                         b.getStatus().name()
                 )).toList();
+        return dto;
     }
 }

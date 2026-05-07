@@ -46,5 +46,7 @@ public class InMemoryHotelRepository implements HotelRepositoty {
     @Override
     public ArrayList<Room> getRooms() { return rooms; }
     @Override
-    public ArrayList<Booking> getBookings() { return bookings; }
+    public ArrayList<Booking> getBookings() {
+        System.out.println("start in memory repository");
+        return bookings; }
 }
