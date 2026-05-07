@@ -52,7 +52,7 @@ public class MongoHotelRepository implements HotelRepositoty {
 
     @Override
     public ArrayList<Booking> getBookings() {
-        System.out.println("start in MONGO repository");
+        System.out.println("start in MONGO repository: number: " + bookingRepo.findAll().size());
         return new ArrayList<>(bookingRepo.findAll());
     }
 
