@@ -1,10 +1,12 @@
 package com.hotel.model;
 
 import com.hotel.model.enums.BookingStatus;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
+@Document(collection = "booking")
 public class Booking {
     private static long idBooking = 0;
     private final long id;
@@ -38,6 +40,10 @@ public class Booking {
     public LocalDate getCheckOutDate() { return checkOuDate; }
     public double getTotalPrice() { return totalPrice; }
     public BookingStatus getStatus() { return status; }
+
+    public long getNights() {
+        return nights;
+    }
 
     public void setStatus(BookingStatus status) { this.status = status; }
 }

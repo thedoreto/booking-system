@@ -1,5 +1,6 @@
 package com.hotel.service;
 
+import com.hotel.dto.BookingDTO;
 import com.hotel.model.Booking;
 import com.hotel.model.Customer;
 import com.hotel.model.Room;
@@ -115,5 +116,19 @@ public class HotelService {
     private boolean isDateBooked(Booking b, LocalDate date) {
         return !date.isBefore(b.getCheckInDate())
                 && !date.isAfter(b.getCheckOutDate());
+    }
+
+    public List<BookingDTO> getAllBookings() {
+        return repo.getBookings().stream()
+                .map(b -> new BookingDTO(
+                        b.getId(),
+                        b.getCustomer().getId(),
+                        b.getRoom().getId(),
+                        b.getCheckInDate(),
+                        b.getCheckOutDate(),
+                        b.getNights(),
+                        b.getTotalPrice(),
+                        b.getStatus().name()
+                )).toList();
     }
 }

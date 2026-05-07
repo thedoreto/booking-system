@@ -2,7 +2,9 @@ package com.hotel.model;
 
 import com.hotel.model.enums.BookingStatus;
 import com.hotel.model.enums.RoomType;
+import org.springframework.data.mongodb.core.mapping.Document;
 
+@Document(collection = "room")
 public class Room {
     private static int idCount = 0;
     private final int id;

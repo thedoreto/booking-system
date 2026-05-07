@@ -1,12 +1,14 @@
 package com.hotel.model;
 
-import com.hotel.service.result.Result;
+import org.springframework.data.mongodb.core.mapping.Document;
 
+@Document(collection = "customer")
 public class Customer {
     private static int idCount = 0;
     private int id;
     private String name;
     private String email;
+
     public Customer(String name, String email) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Name cannot be empty");
