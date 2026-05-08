@@ -40,9 +40,8 @@ public class BookingController {
     }
 
     @GetMapping("allRooms")
-    public String getAll() {
-        hotelService.getAllRooms();
-        return "Get all rooms";
+    public List<RoomDTO> getAll() {
+        return hotelService.getAllRooms();
     }
 
     @GetMapping("customers")

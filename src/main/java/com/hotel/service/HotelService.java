@@ -122,9 +122,12 @@ public class HotelService {
         return dto;
     }
 
-    public void getAllRooms() {
-        repo.getRooms();
+    public List<RoomDTO> getAllRooms() {
+        return repo.getRooms().stream()
+                .map(this::convertRoomToDTO)
+                .toList();
     }
+
     public Result<List<RoomDTO>> finaAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate) {
         if (!isValidPeriod(checkInDate, checkOutDate)) {
             return Result.failure("Invalid date");
@@ -157,12 +160,13 @@ public class HotelService {
     }
 
     private RoomDTO convertRoomToDTO(Room room) {
+        System.out.println("id: " + room.getId() + " number: " + room.getRoomNumber()
+       + " type: " + room.getType() + " price: " + room.getPricePerNight());
         return new RoomDTO(room.getId(),
                 room.getRoomNumber(),
                 room.getType().toString(),
                 room.getPricePerNight());
     }
-
 
 
 }
