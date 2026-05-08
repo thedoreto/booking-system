@@ -14,6 +14,9 @@ public class Customer {
     private String name;
     private String email;
 
+    public Customer() {
+    }
+
     public Customer(String name, String email) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Name cannot be empty");

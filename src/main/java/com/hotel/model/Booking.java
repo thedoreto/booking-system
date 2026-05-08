@@ -21,12 +21,16 @@ public class Booking {
     private double totalPrice;
     private BookingStatus status;//CONFIRMED, CANCELED
 
+    public Booking() {
+        // REQUIRED by Spring Data Mongo
+    }
+
     public Booking(String customerId, Room room, LocalDate checkInDate, LocalDate checkOuDate) {
         this.customerId = customerId;
         this.roomId = room.getId();
         this.checkInDate = checkInDate;
         this.checkOuDate = checkOuDate;
-        this.nights = ChronoUnit.DAYS.between(checkOuDate, checkInDate);
+        this.nights = ChronoUnit.DAYS.between(checkInDate, checkOuDate);
         this.totalPrice = calculateTotalPrice(room, nights);
         this.status = BookingStatus.CONFIRMED;
     }

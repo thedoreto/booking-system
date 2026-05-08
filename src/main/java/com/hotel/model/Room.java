@@ -15,6 +15,7 @@ public class Room {
     private double pricePerNight;
 
     public Room() {
+        // REQUIRED by Spring Data Mongo
     }
 
     public Room(int roomNumber, RoomType type, double pricePerNight) {
