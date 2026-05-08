@@ -3,10 +3,14 @@ package com.hotel.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-//@Document(collection = "customers")
+import java.util.Objects;
+
+@Document(collection = "customers")
 public class Customer {
-    private static int idCount = 0;
-    @Id private int id;
+
+    @Id
+    private String id;
+
     private String name;
     private String email;
 
@@ -21,7 +25,6 @@ public class Customer {
 
         this.name = name;
         this.email = email;
-        this.id = idCount++ ;
     }
 
 
@@ -30,13 +33,13 @@ public class Customer {
         if (this == o) return true;
         if (!(o instanceof Customer)) return false;
         Customer other = (Customer) o;
-        return this.id == other.id;
+        return Objects.equals(this.id, other.id);
     }
     @Override
     public int hashCode() {
-        return Integer.hashCode(id);
+        return Integer.parseInt(id);
     }
-    public int getId() { return id; }
+    public String getId() { return id; }
     public String getName() { return name; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }

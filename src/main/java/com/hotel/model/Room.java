@@ -11,16 +11,13 @@ public class Room {
     private String id;
 
     private int roomNumber;
-
     private RoomType type;  // SINGLE, DOUBLE, APARTMENT
-
     private double pricePerNight;
 
     public Room() {
     }
 
-    public Room(String id, int roomNumber, RoomType type, double pricePerNight) {
-        this.id = id;
+    public Room(int roomNumber, RoomType type, double pricePerNight) {
         this.roomNumber = roomNumber;
         this.type = type;
         this.pricePerNight = pricePerNight;
@@ -42,9 +39,7 @@ public class Room {
         return pricePerNight;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
+//    public void setId(String id) { this.id = id;}
 
     public void setRoomNumber(int roomNumber) {
         this.roomNumber = roomNumber;

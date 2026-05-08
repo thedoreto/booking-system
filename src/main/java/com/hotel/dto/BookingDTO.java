@@ -8,15 +8,15 @@ import java.time.LocalDate;
 
 public class BookingDTO {
     private long id;
-    private int customerId;
-    private int roomId;
+    private String customerId;
+    private String roomId;
     private LocalDate checkInDate;
     private LocalDate checkOuDate;
     private long nights;
     private double totalPrice;
     private String status;//CONFIRMED, CANCELED
 
-    public BookingDTO(long id, int customerId, int roomId, LocalDate checkInDate, LocalDate checkOuDate, long nights, double totalPrice, String status) {
+    public BookingDTO(long id, String customerId, String roomId, LocalDate checkInDate, LocalDate checkOuDate, long nights, double totalPrice, String status) {
         System.out.println("Booking id: " + id);
         this.id = id;
         this.customerId = customerId;
@@ -36,19 +36,19 @@ public class BookingDTO {
         this.id = id;
     }
 
-    public int getCustomerId() {
+    public String getCustomerId() {
         return customerId;
     }
 
-    public void setCustomerId(int customerId) {
+    public void setCustomerId(String customerId) {
         this.customerId = customerId;
     }
 
-    public int getRoomId() {
+    public String getRoomId() {
         return roomId;
     }
 
-    public void setRoomId(int roomId) {
+    public void setRoomId(String roomId) {
         this.roomId = roomId;
     }
 

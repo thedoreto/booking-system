@@ -151,7 +151,7 @@ public class HotelService {
     private BookingDTO convertBookingToDTO(Booking booking) {
         return new BookingDTO(booking.getId(),
                 booking.getCustomer().getId(),
-                Integer.parseInt(booking.getRoom().getId()),
+                booking.getRoom().getId(),
                 booking.getCheckInDate(),
                 booking.getCheckOutDate(),
                 booking.getNights(),
@@ -160,8 +160,6 @@ public class HotelService {
     }
 
     private RoomDTO convertRoomToDTO(Room room) {
-        System.out.println("id: " + room.getId() + " number: " + room.getRoomNumber()
-       + " type: " + room.getType() + " price: " + room.getPricePerNight());
         return new RoomDTO(room.getId(),
                 room.getRoomNumber(),
                 room.getType().toString(),
