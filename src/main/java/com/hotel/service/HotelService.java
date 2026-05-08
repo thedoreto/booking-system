@@ -25,17 +25,19 @@ public class HotelService {
         rebuildIndex();
     }
 
-    public Result<Booking> createBooking(LocalDate checkInDate, LocalDate checkOutDate, Customer customer, Room room) {
+    public Result<Booking> createBooking(String checkInString, String  checkOutString, Customer customer, Room room) {
         if (customer == null || room == null) {
             return Result.failure("Invalid input");
         }
+        LocalDate checkInDate = LocalDate.parse(checkInString);
+        LocalDate checkOutDate = LocalDate.parse(checkOutString);
         if (!isValidPeriod(checkInDate, checkOutDate)) {
             return Result.failure("Invalid dates");
         }
         if (!isRoomAvailable(room, checkInDate, checkOutDate)) {
             return Result.failure("Booking not done");
         }
-        Booking booking = new Booking(customer.getId(), room, checkInDate, checkOutDate);
+        Booking booking = new Booking(customer.getId(), room, checkInString, checkOutString);
         bookingsByRoomId.computeIfAbsent(Integer.parseInt(room.getId()), k -> new ArrayList<>()).add(booking);
         return Result.success(booking);
     }
