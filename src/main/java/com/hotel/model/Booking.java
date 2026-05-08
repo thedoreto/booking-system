@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
-@Document(collection = "bookings")
+//@Document(collection = "bookings")
 public class Booking {
     private static long idBooking = 0;
     @Id private final long id;
