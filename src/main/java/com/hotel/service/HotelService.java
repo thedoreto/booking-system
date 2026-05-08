@@ -46,7 +46,7 @@ public class HotelService {
         if (booking == null) {
             return Result.failure("Invalid booking");
         }
-        booking.setStatus(BookingStatus.CANCELLED);
+        booking.setStatus(BookingStatus.CANCELED);
         /*  boolean removedFromRepo = repo.getBookings().remove(booking);
         List<Booking> roomBookings = bookingsByRoomId.get(booking.getRoom().getId());
         boolean removedFromMap = roomBookings.remove(booking);
