@@ -35,7 +35,7 @@ public class HotelService {
         if (!isRoomAvailable(room, checkInDate, checkOutDate)) {
             return Result.failure("Booking not done");
         }
-        Booking booking = new Booking(customer, room, checkInDate, checkOutDate);
+        Booking booking = new Booking(customer.getId(), room, checkInDate, checkOutDate);
         bookingsByRoomId.computeIfAbsent(Integer.parseInt(room.getId()), k -> new ArrayList<>()).add(booking);
         return Result.success(booking);
     }
@@ -54,9 +54,9 @@ public class HotelService {
         return Result.success();
     }
 
-    public Result<Void> cancelBooking(int bookingId) {
+    public Result<Void> cancelBooking(String bookingId) {
         Optional<Booking> bookingOpt = repo.getBookings().stream()
-                .filter(b -> b.getId() == bookingId).findFirst();
+                .filter(b -> Objects.equals(b.getId(), bookingId)).findFirst();
         if (bookingOpt.isEmpty()) {
             return Result.failure("Booking doesn't exists");
         }
@@ -66,7 +66,7 @@ public class HotelService {
     public Result<List<Booking>> getBookingsByCustomer(Customer customer) {
         if (customer == null) return Result.failure("Invalid Customer");
         List<Booking> bookings = repo.getBookings().stream()
-            .filter(b -> b.getCustomer().getId() == customer.getId()).toList();
+            .filter(b -> b.getCustomerId() == customer.getId()).toList();
         return Result.success(bookings);
     }
 
@@ -79,7 +79,7 @@ public class HotelService {
     public boolean isRoomAvailable(Room room, LocalDate from, LocalDate to) {
         return repo.getBookings().stream()
                 .filter(b -> b.getStatus() == BookingStatus.CONFIRMED)
-                .filter(b -> b.getRoom().getId() == room.getId())
+                .filter(b -> Objects.equals(b.getRoomId(), room.getId()))
                 .noneMatch(b -> isOverlap(from, to, b.getCheckInDate(), b.getCheckOutDate()));
     }
 
@@ -89,7 +89,7 @@ public class HotelService {
     private void rebuildIndex() {
         bookingsByRoomId.clear();
         for (Booking b: repo.getBookings()) {
-            bookingsByRoomId.computeIfAbsent(Integer.parseInt(b.getRoom().getId()), k -> new ArrayList<>()).add(b);
+            bookingsByRoomId.computeIfAbsent(Integer.parseInt(b.getRoomId()), k -> new ArrayList<>()).add(b);
         }
     }
 
@@ -150,8 +150,8 @@ public class HotelService {
     }
     private BookingDTO convertBookingToDTO(Booking booking) {
         return new BookingDTO(booking.getId(),
-                booking.getCustomer().getId(),
-                booking.getRoom().getId(),
+                booking.getCustomerId(),
+                booking.getRoomId(),
                 booking.getCheckInDate(),
                 booking.getCheckOutDate(),
                 booking.getNights(),

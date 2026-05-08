@@ -18,7 +18,7 @@ public class InMemoryHotelRepository implements HotelRepositoty {
     @Override
     public List<Booking> getActiveBookingsByCustomer(Customer customer) {
         return bookings.stream()
-                .filter(b -> Objects.equals(b.getCustomer(), customer))
+                .filter(b -> Objects.equals(b.getCustomerId(), customer.getId()))
                 .filter(b -> b.getStatus() == BookingStatus.CONFIRMED)
                 .toList();
     }

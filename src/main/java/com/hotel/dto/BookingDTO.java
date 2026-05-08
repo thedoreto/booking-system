@@ -1,13 +1,9 @@
 package com.hotel.dto;
 
-import com.hotel.model.Customer;
-import com.hotel.model.Room;
-import com.hotel.model.enums.BookingStatus;
-
 import java.time.LocalDate;
 
 public class BookingDTO {
-    private long id;
+    private String id;
     private String customerId;
     private String roomId;
     private LocalDate checkInDate;
@@ -16,8 +12,7 @@ public class BookingDTO {
     private double totalPrice;
     private String status;//CONFIRMED, CANCELED
 
-    public BookingDTO(long id, String customerId, String roomId, LocalDate checkInDate, LocalDate checkOuDate, long nights, double totalPrice, String status) {
-        System.out.println("Booking id: " + id);
+    public BookingDTO(String id, String customerId, String roomId, LocalDate checkInDate, LocalDate checkOuDate, long nights, double totalPrice, String status) {
         this.id = id;
         this.customerId = customerId;
         this.roomId = roomId;
@@ -28,11 +23,11 @@ public class BookingDTO {
         this.status = status;
     }
 
-    public long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
