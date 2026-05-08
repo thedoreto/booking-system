@@ -1,5 +1,6 @@
 package com.hotel.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hotel.model.enums.BookingStatus;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -15,7 +16,9 @@ public class Booking {
 
     private String customerId;
     private String roomId;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate checkInDate;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate checkOuDate;
     private long nights;
     private double totalPrice;
@@ -30,7 +33,7 @@ public class Booking {
         this.roomId = room.getId();
         this.checkInDate = checkInDate;
         this.checkOuDate = checkOuDate;
-        this.nights = ChronoUnit.DAYS.between(checkInDate, checkOuDate);
+        this.nights = ChronoUnit.DAYS.between(checkOuDate, checkInDate);
         this.totalPrice = calculateTotalPrice(room, nights);
         this.status = BookingStatus.CONFIRMED;
     }
