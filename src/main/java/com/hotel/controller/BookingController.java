@@ -39,6 +39,12 @@ public class BookingController {
 
     }
 
+    @GetMapping("allRooms")
+    public String getAll() {
+        hotelService.getAllRooms();
+        return "Get all rooms";
+    }
+
     @GetMapping("customers")
         public List<CustomerDTO>  getAllCustomers() {
             return hotelService.findAllCustomers();

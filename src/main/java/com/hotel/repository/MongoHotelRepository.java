@@ -37,6 +37,7 @@ public class MongoHotelRepository implements HotelRepositoty {
 
     @Override
     public ArrayList<Room> getRooms() {
+        System.out.println(roomRepo.findAll());
         return new ArrayList<>(roomRepo.findAll());
     }
 

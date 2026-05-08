@@ -122,6 +122,9 @@ public class HotelService {
         return dto;
     }
 
+    public void getAllRooms() {
+        repo.getRooms();
+    }
     public Result<List<RoomDTO>> finaAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate) {
         if (!isValidPeriod(checkInDate, checkOutDate)) {
             return Result.failure("Invalid date");
@@ -159,6 +162,7 @@ public class HotelService {
                 room.getType().toString(),
                 room.getPricePerNight());
     }
+
 
 
 }
