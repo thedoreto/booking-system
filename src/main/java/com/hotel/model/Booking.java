@@ -1,15 +1,16 @@
 package com.hotel.model;
 
 import com.hotel.model.enums.BookingStatus;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
-@Document(collection = "booking")
+@Document(collection = "bookings")
 public class Booking {
     private static long idBooking = 0;
-    private final long id;
+    @Id private final long id;
     private Customer customer;
     private Room room;
     private LocalDate checkInDate;

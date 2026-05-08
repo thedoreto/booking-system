@@ -1,11 +1,12 @@
 package com.hotel.model;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "customer")
+@Document(collection = "customers")
 public class Customer {
     private static int idCount = 0;
-    private int id;
+    @Id private int id;
     private String name;
     private String email;
 

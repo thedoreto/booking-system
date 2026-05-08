@@ -2,12 +2,13 @@ package com.hotel.model;
 
 import com.hotel.model.enums.BookingStatus;
 import com.hotel.model.enums.RoomType;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "room")
+@Document(collection = "rooms")
 public class Room {
     private static int idCount = 0;
-    private final int id;
+    @Id private final int id;
     private final int roomNumber;
     private RoomType type;//SINGLE, DOUBLE, APARTMENT
     private double pricePerNight;

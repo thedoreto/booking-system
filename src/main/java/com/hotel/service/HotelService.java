@@ -1,6 +1,8 @@
 package com.hotel.service;
 
 import com.hotel.dto.BookingDTO;
+import com.hotel.dto.CustomerDTO;
+import com.hotel.dto.RoomDTO;
 import com.hotel.model.Booking;
 import com.hotel.model.Customer;
 import com.hotel.model.Room;
@@ -21,16 +23,6 @@ public class HotelService {
     public HotelService(HotelRepositoty repo) {
         this.repo = repo;
         rebuildIndex();
-    }
-    public Result<List<Room>> finaAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate) {
-        if (!isValidPeriod(checkInDate, checkOutDate)) {
-            return Result.failure("Invalid date");
-        }
-        List<Room> rooms = repo.getRooms().stream()
-                .filter(room -> isRoomAvailable(room, checkInDate, checkOutDate))
-                .toList();
-
-        return Result.success(rooms);
     }
 
     public Result<Booking> createBooking(LocalDate checkInDate, LocalDate checkOutDate, Customer customer, Room room) {
@@ -125,16 +117,48 @@ public class HotelService {
         System.out.println("start stream");
         Stream<Booking> stream = bookings.stream();
         System.out.println("start map");
-         List<BookingDTO> dto=  stream.map(b -> new BookingDTO(
-                        b.getId(),
-                        b.getCustomer().getId(),
-                        b.getRoom().getId(),
-                        b.getCheckInDate(),
-                        b.getCheckOutDate(),
-                        b.getNights(),
-                        b.getTotalPrice(),
-                        b.getStatus().name()
-                )).toList();
+         List<BookingDTO> dto=  stream.map(this::convertBookingToDTO)
+                .toList();
         return dto;
     }
+
+    public Result<List<RoomDTO>> finaAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate) {
+        if (!isValidPeriod(checkInDate, checkOutDate)) {
+            return Result.failure("Invalid date");
+        }
+        List<RoomDTO> rooms = repo.getRooms().stream()
+                .filter(room -> isRoomAvailable(room, checkInDate, checkOutDate))
+                .map(this::convertRoomToDTO)
+                .toList();
+
+        return Result.success(rooms);
+    }
+    public List<CustomerDTO> findAllCustomers() {
+        return repo.getCustomers().stream()
+                .map(this::convertCustomerToDTO)
+                .toList();
+    }
+
+    private CustomerDTO convertCustomerToDTO(Customer customer) {
+        return new CustomerDTO(customer.getId(), customer.getName(), customer.getEmail());
+    }
+    private BookingDTO convertBookingToDTO(Booking booking) {
+        return new BookingDTO(booking.getId(),
+                booking.getCustomer().getId(),
+                booking.getRoom().getId(),
+                booking.getCheckInDate(),
+                booking.getCheckOutDate(),
+                booking.getNights(),
+                booking.getTotalPrice(),
+                booking.getStatus().name());
+    }
+
+    private RoomDTO convertRoomToDTO(Room room) {
+        return new RoomDTO(room.getId(),
+                room.getRoomNumber(),
+                room.getType().toString(),
+                room.getPricePerNight());
+    }
+
+
 }

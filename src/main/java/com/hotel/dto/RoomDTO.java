@@ -7,6 +7,13 @@ public class RoomDTO {
     private String type;//SINGLE, DOUBLE, APARTMENT
     private double pricePerNight;
 
+    public RoomDTO(int id, int roomNumber, String type, double pricePerNight) {
+        this.id = id;
+        this.roomNumber = roomNumber;
+        this.type = type;
+        this.pricePerNight = pricePerNight;
+    }
+
     public int getId() {
         return id;
     }

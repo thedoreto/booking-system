@@ -23,6 +23,6 @@ public class Result<T> {
         return new Result(false, 0, error);
     }
     public boolean isSuccess() { return success; }
-    public T getFee() { return data; }
+    public T getData() { return data; }
     public String getError() { return error; }
 }
