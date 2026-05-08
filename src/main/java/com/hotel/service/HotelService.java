@@ -36,7 +36,7 @@ public class HotelService {
             return Result.failure("Booking not done");
         }
         Booking booking = new Booking(customer, room, checkInDate, checkOutDate);
-        bookingsByRoomId.computeIfAbsent(room.getId(), k -> new ArrayList<>()).add(booking);
+        bookingsByRoomId.computeIfAbsent(Integer.parseInt(room.getId()), k -> new ArrayList<>()).add(booking);
         return Result.success(booking);
     }
 
@@ -89,7 +89,7 @@ public class HotelService {
     private void rebuildIndex() {
         bookingsByRoomId.clear();
         for (Booking b: repo.getBookings()) {
-            bookingsByRoomId.computeIfAbsent(b.getRoom().getId(), k -> new ArrayList<>()).add(b);
+            bookingsByRoomId.computeIfAbsent(Integer.parseInt(b.getRoom().getId()), k -> new ArrayList<>()).add(b);
         }
     }
 
@@ -148,7 +148,7 @@ public class HotelService {
     private BookingDTO convertBookingToDTO(Booking booking) {
         return new BookingDTO(booking.getId(),
                 booking.getCustomer().getId(),
-                booking.getRoom().getId(),
+                Integer.parseInt(booking.getRoom().getId()),
                 booking.getCheckInDate(),
                 booking.getCheckOutDate(),
                 booking.getNights(),

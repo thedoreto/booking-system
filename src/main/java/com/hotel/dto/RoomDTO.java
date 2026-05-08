@@ -2,23 +2,23 @@ package com.hotel.dto;
 
 public class RoomDTO {
 
-    private int id;
+    private String id;
     private int roomNumber;
     private String type;//SINGLE, DOUBLE, APARTMENT
     private double pricePerNight;
 
-    public RoomDTO(int id, int roomNumber, String type, double pricePerNight) {
+    public RoomDTO(String id, int roomNumber, String type, double pricePerNight) {
         this.id = id;
         this.roomNumber = roomNumber;
         this.type = type;
         this.pricePerNight = pricePerNight;
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 

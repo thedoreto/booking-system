@@ -30,7 +30,7 @@ public class InMemoryHotelRepository implements HotelRepositoty {
     @Override
     public Optional<Room> getRoomByNumber(int roomNumber) {
         return  rooms.stream()
-                .filter(r -> roomNumber == r.getId())
+                .filter(r -> roomNumber == Integer.parseInt(r.getId()))
                 .findFirst();
     }
 
