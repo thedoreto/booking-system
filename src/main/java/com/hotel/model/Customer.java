@@ -19,7 +19,7 @@ public class Customer {
             throw new IllegalArgumentException("Name cannot be empty");
         }
         if (email == null || email.isBlank() ||
-                !email.matches("@") || !email.matches(".")) {
+                !email.contains("@") || !email.contains(".")) {
             throw new IllegalArgumentException("Not valid email");
         }
 
