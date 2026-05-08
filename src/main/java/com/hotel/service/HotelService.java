@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 @Service
 public class HotelService {
     private HotelRepositoty repo;
-    private Map<Integer, List<Booking>> bookingsByRoomId  = new HashMap<>();
+    private Map<String, List<Booking>> bookingsByRoomId  = new HashMap<>();
 
     public HotelService(HotelRepositoty repo) {
         this.repo = repo;
@@ -38,7 +38,7 @@ public class HotelService {
             return Result.failure("Booking not done");
         }
         Booking booking = new Booking(customer.getId(), room, checkInString, checkOutString);
-        bookingsByRoomId.computeIfAbsent(Integer.parseInt(room.getId()), k -> new ArrayList<>()).add(booking);
+        bookingsByRoomId.computeIfAbsent(room.getId(), k -> new ArrayList<>()).add(booking);
         return Result.success(booking);
     }
 
@@ -91,7 +91,7 @@ public class HotelService {
     private void rebuildIndex() {
         bookingsByRoomId.clear();
         for (Booking b: repo.getBookings()) {
-            bookingsByRoomId.computeIfAbsent(Integer.parseInt(b.getRoomId()), k -> new ArrayList<>()).add(b);
+            bookingsByRoomId.computeIfAbsent(b.getRoomId(), k -> new ArrayList<>()).add(b);
         }
     }
 
