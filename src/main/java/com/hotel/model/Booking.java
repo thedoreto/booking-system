@@ -19,7 +19,7 @@ public class Booking {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate checkInDate;
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate checkOuDate;
+    private LocalDate checkOutDate;
     private long nights;
     private double totalPrice;
     private BookingStatus status;//CONFIRMED, CANCELED
@@ -28,12 +28,12 @@ public class Booking {
         // REQUIRED by Spring Data Mongo
     }
 
-    public Booking(String customerId, Room room, String checkInDate, String checkOuDate) {
+    public Booking(String customerId, Room room, String checkInDate, String checkOutDate) {
         this.customerId = customerId;
         this.roomId = room.getId();
         this.checkInDate = LocalDate.parse(checkInDate);
-        this.checkOuDate = LocalDate.parse(checkOuDate);
-        this.nights = ChronoUnit.DAYS.between(this.checkOuDate, this.checkInDate);
+        this.checkOutDate = LocalDate.parse(checkOutDate);
+        this.nights = ChronoUnit.DAYS.between(this.checkOutDate, this.checkInDate);
         this.totalPrice = calculateTotalPrice(room, nights);
         this.status = BookingStatus.CONFIRMED;
     }
@@ -46,7 +46,7 @@ public class Booking {
     public String getCustomerId() { return customerId; }
     public String getRoomId() { return roomId; }
     public LocalDate getCheckInDate() { return checkInDate; }
-    public LocalDate getCheckOutDate() { return checkOuDate; }
+    public LocalDate getCheckOutDate() { return checkOutDate; }
     public double getTotalPrice() { return totalPrice; }
     public BookingStatus getStatus() { return status; }
 

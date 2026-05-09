@@ -7,17 +7,17 @@ public class BookingDTO {
     private String customerId;
     private String roomId;
     private LocalDate checkInDate;
-    private LocalDate checkOuDate;
+    private LocalDate checkOutDate;
     private long nights;
     private double totalPrice;
     private String status;//CONFIRMED, CANCELED
 
-    public BookingDTO(String id, String customerId, String roomId, LocalDate checkInDate, LocalDate checkOuDate, long nights, double totalPrice, String status) {
+    public BookingDTO(String id, String customerId, String roomId, LocalDate checkInDate, LocalDate checkOutDate, long nights, double totalPrice, String status) {
         this.id = id;
         this.customerId = customerId;
         this.roomId = roomId;
         this.checkInDate = checkInDate;
-        this.checkOuDate = checkOuDate;
+        this.checkOutDate = checkOutDate;
         this.nights = nights;
         this.totalPrice = totalPrice;
         this.status = status;
@@ -56,11 +56,11 @@ public class BookingDTO {
     }
 
     public LocalDate getCheckOuDate() {
-        return checkOuDate;
+        return checkOutDate;
     }
 
     public void setCheckOuDate(LocalDate checkOuDate) {
-        this.checkOuDate = checkOuDate;
+        this.checkOutDate = checkOuDate;
     }
 
     public long getNights() {
