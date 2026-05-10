@@ -7,7 +7,10 @@ import com.hotel.model.Booking;
 import com.hotel.model.Customer;
 import com.hotel.model.Room;
 import com.hotel.model.enums.BookingStatus;
+import com.hotel.repository.BookingMongoRepository;
+import com.hotel.repository.CustomerMongoRepository;
 import com.hotel.repository.HotelRepositoty;
+import com.hotel.repository.RoomMongoRepository;
 import com.hotel.service.result.Result;
 import org.springframework.stereotype.Service;
 
@@ -17,11 +20,20 @@ import java.util.stream.Stream;
 
 @Service
 public class HotelService {
-    private HotelRepositoty repo;
+ //   private HotelRepositoty repo;
+
+    private RoomMongoRepository roomRepo;
+    private CustomerMongoRepository customerRepo;
+    private BookingMongoRepository bookingRepo;
+
     private Map<String, List<Booking>> bookingsByRoomId  = new HashMap<>();
 
-    public HotelService(HotelRepositoty repo) {
-        this.repo = repo;
+    public HotelService(RoomMongoRepository roomRepo,
+                        CustomerMongoRepository customerRepo,
+                        BookingMongoRepository bookingRepo) {
+        this.roomRepo = roomRepo;
+        this.customerRepo = customerRepo;
+        this.bookingRepo = bookingRepo;
         rebuildIndex();
     }
 
@@ -57,8 +69,8 @@ public class HotelService {
     }
 
     public Result<Void> cancelBooking(String bookingId) {
-        Optional<Booking> bookingOpt = repo.getBookings().stream()
-                .filter(b -> Objects.equals(b.getId(), bookingId)).findFirst();
+        Optional<Booking> bookingOpt = bookingRepo.findById(bookingId);
+     //   Optional<Booking> bookingOpt = repo.getBookings().stream()                .filter(b -> Objects.equals(b.getId(), bookingId)).findFirst();
         if (bookingOpt.isEmpty()) {
             return Result.failure("Booking doesn't exists");
         }
@@ -66,9 +78,8 @@ public class HotelService {
     }
 
     public Result<List<Booking>> getBookingsByCustomer(Customer customer) {
-        if (customer == null) return Result.failure("Invalid Customer");
-        List<Booking> bookings = repo.getBookings().stream()
-            .filter(b -> b.getCustomerId() == customer.getId()).toList();
+        if (customer == null ) return Result.failure("Invalid Customer");
+        List<Booking> bookings = bookingRepo.findByCustomerId(customer.getId());
         return Result.success(bookings);
     }
 
@@ -79,10 +90,11 @@ public class HotelService {
     }
 
     public boolean isRoomAvailable(Room room, LocalDate from, LocalDate to) {
-        return repo.getBookings().stream()
+    /*     repo.getBookings().stream()
                 .filter(b -> b.getStatus() == BookingStatus.CONFIRMED)
                 .filter(b -> Objects.equals(b.getRoomId(), room.getId()))
-                .noneMatch(b -> isOverlap(from, to, b.getCheckInDate(), b.getCheckOutDate()));
+                .noneMatch(b -> isOverlap(from, to, b.getCheckInDate(), b.getCheckOutDate()));*/
+         return false;
     }
 
     private boolean isValidPeriod(LocalDate from, LocalDate to) {
@@ -90,7 +102,7 @@ public class HotelService {
     }
     private void rebuildIndex() {
         bookingsByRoomId.clear();
-        for (Booking b: repo.getBookings()) {
+        for (Booking b: bookingRepo.findAll()) {
             bookingsByRoomId.computeIfAbsent(b.getRoomId(), k -> new ArrayList<>()).add(b);
         }
     }
@@ -99,13 +111,16 @@ public class HotelService {
         return !(end1.isBefore(start2) || start1.isAfter(end2));
     }
 
-    private Result<Room>  findRoom(int id) {
-        if (id == 0) {
+    private Result<Room>  findRoom(int roomNumber) {
+        if (roomNumber <= 0) {
             return Result.failure("Invalid room number");
         }
-        return repo.getRoomByNumber(id)
-                .map(Result::success)
-                .orElseGet(() -> Result.failure("Room not found"));
+        List<Room> rooms = roomRepo.findByRoomNumber(roomNumber);
+        if (rooms.isEmpty() || rooms.size() >= 1 ) {
+            Result.failure("Room not found");
+        }
+        return Result.success(rooms.get(1));
+
     }
 
     private boolean isDateBooked(Booking b, LocalDate date) {
@@ -115,7 +130,7 @@ public class HotelService {
 
     public List<BookingDTO> getAllBookings() {
         System.out.println("start getAllBookings");
-        List<Booking> bookings = repo.getBookings();
+        List<Booking> bookings = bookingRepo.findAll();
         System.out.println("start stream");
         Stream<Booking> stream = bookings.stream();
         System.out.println("start map");
@@ -125,16 +140,26 @@ public class HotelService {
     }
 
     public List<RoomDTO> getAllRooms() {
-        return repo.getRooms().stream()
+        return roomRepo.findAll().stream()
                 .map(this::convertRoomToDTO)
                 .toList();
+    }
+
+    public Optional<RoomDTO> getRoomById(String id) {
+        Optional<Room> roomOpt = roomRepo.findById(id);
+        if (roomOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(convertRoomToDTO(roomOpt.get()));
     }
 
     public Result<List<RoomDTO>> finaAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate) {
         if (!isValidPeriod(checkInDate, checkOutDate)) {
             return Result.failure("Invalid date");
         }
-        List<RoomDTO> rooms = repo.getRooms().stream()
+
+        List<RoomDTO> rooms = roomRepo.findAll().stream()
                 .filter(room -> isRoomAvailable(room, checkInDate, checkOutDate))
                 .map(this::convertRoomToDTO)
                 .toList();
@@ -142,7 +167,7 @@ public class HotelService {
         return Result.success(rooms);
     }
     public List<CustomerDTO> findAllCustomers() {
-        return repo.getCustomers().stream()
+        return customerRepo.findAll().stream()
                 .map(this::convertCustomerToDTO)
                 .toList();
     }
@@ -169,4 +194,15 @@ public class HotelService {
     }
 
 
+    public Result<Room> updateRoom(String id) {
+        Optional<Room> roomOpt = roomRepo.findById(id);
+
+        if (roomOpt.isEmpty()) {
+            return Result.failure("Room doesn't exists");
+        }
+        Room room = roomOpt.get();
+        roomRepo.save(room);
+        return  Result.success(room);
+
+    }
 }

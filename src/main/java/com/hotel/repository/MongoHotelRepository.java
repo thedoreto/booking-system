@@ -37,13 +37,12 @@ public class MongoHotelRepository implements HotelRepositoty {
 
     @Override
     public ArrayList<Room> getRooms() {
-        System.out.println(roomRepo.findAll());
         return new ArrayList<>(roomRepo.findAll());
     }
 
     @Override
     public Optional<Room> getRoomByNumber(int roomNumber) {
-        return roomRepo.findByRoomNumber(roomNumber);
+        return roomRepo.findByRoomNumber(roomNumber).stream().findFirst();
     }
 
     @Override
@@ -74,5 +73,17 @@ public class MongoHotelRepository implements HotelRepositoty {
     @Override
     public Optional<Customer> getCustomerByName(String name) {
         return customerRepo.findByName(name);
+    }
+
+    public CustomerMongoRepository getCustomerRepo() {
+        return customerRepo;
+    }
+
+    public RoomMongoRepository getRoomRepo() {
+        return roomRepo;
+    }
+
+    public BookingMongoRepository getBookingRepo() {
+        return bookingRepo;
     }
 }

@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -45,6 +46,19 @@ public class BookingController {
         return hotelService.getAllRooms();
     }
 
+    @GetMapping("rooms/{id}")
+    public Optional<RoomDTO> getRoom(@PathVariable String id) {
+        return  hotelService.getRoomById(id);
+    }
+
+    @PutMapping("/rooms/{id}")
+    public String updateRoom(@PathVariable String id) {
+        Result<Room> result = hotelService.updateRoom(id);
+        if (result.getData() == null) {
+             return "Room not found";
+        }
+        return "Room updated";
+    }
     @GetMapping("customers")
         public List<CustomerDTO>  getAllCustomers() {
             return hotelService.findAllCustomers();
