@@ -52,13 +52,16 @@ public class BookingController {
     }
 
     @PutMapping("/rooms/{id}")
-    public String updateRoom(@PathVariable String id) {
-        Result<Room> result = hotelService.updateRoom(id);
-        if (result.getData() == null) {
-             return "Room not found";
+    public ResponseEntity<RoomDTO> updateRoom(@PathVariable String id, @RequestBody RoomDTO roomDTO) {
+        Optional<RoomDTO> roomOpt = hotelService.updateRoom(id, roomDTO);
+
+        if (roomOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
-        return "Room updated";
+
+        return ResponseEntity.ok(roomOpt.get());
     }
+
     @GetMapping("customers")
         public List<CustomerDTO>  getAllCustomers() {
             return hotelService.findAllCustomers();

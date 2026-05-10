@@ -7,6 +7,7 @@ import com.hotel.model.Booking;
 import com.hotel.model.Customer;
 import com.hotel.model.Room;
 import com.hotel.model.enums.BookingStatus;
+import com.hotel.model.enums.RoomType;
 import com.hotel.repository.BookingMongoRepository;
 import com.hotel.repository.CustomerMongoRepository;
 import com.hotel.repository.HotelRepositoty;
@@ -194,15 +195,20 @@ public class HotelService {
     }
 
 
-    public Result<Room> updateRoom(String id) {
+    public Optional<RoomDTO> updateRoom(String id, RoomDTO roomDTO) {
         Optional<Room> roomOpt = roomRepo.findById(id);
 
         if (roomOpt.isEmpty()) {
-            return Result.failure("Room doesn't exists");
+            return Optional.empty();
         }
+
         Room room = roomOpt.get();
-        roomRepo.save(room);
-        return  Result.success(room);
+        room.setType(RoomType.valueOf(roomDTO.getType()));
+        room.setPricePerNight(roomDTO.getPricePerNight());
+
+        Room updated = roomRepo.save(room);
+        return Optional.of(convertRoomToDTO(updated));
+
 
     }
 }
