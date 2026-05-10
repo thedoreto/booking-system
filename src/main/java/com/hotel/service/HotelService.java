@@ -201,6 +201,10 @@ public class HotelService {
                 || !ValidationUtil.isValidRoomType(roomDTO.getType()) ) {
             return Optional.empty();
         }
+        List<Room> exists = roomRepo.findByRoomNumber(roomDTO.getRoomNumber());
+        if (!exists.isEmpty()) {
+            return Optional.empty();
+        }
         Room room = new Room(roomDTO.getRoomNumber(),
                 RoomType.valueOf(roomDTO.getType()),
                 roomDTO.getPricePerNight());
