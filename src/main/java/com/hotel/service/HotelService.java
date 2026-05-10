@@ -8,6 +8,7 @@ import com.hotel.model.Customer;
 import com.hotel.model.Room;
 import com.hotel.model.enums.BookingStatus;
 import com.hotel.model.enums.RoomType;
+import com.hotel.model.util.ValidationUtil;
 import com.hotel.repository.BookingMongoRepository;
 import com.hotel.repository.CustomerMongoRepository;
 import com.hotel.repository.HotelRepositoty;
@@ -195,6 +196,19 @@ public class HotelService {
     }
 
 
+    public Optional<RoomDTO> newRoom(RoomDTO roomDTO) {
+        if (roomDTO == null || roomDTO.getRoomNumber() <= 0 || roomDTO.getPricePerNight() < 0
+                || !ValidationUtil.isValidRoomType(roomDTO.getType()) ) {
+            return Optional.empty();
+        }
+        Room room = new Room(roomDTO.getRoomNumber(),
+                RoomType.valueOf(roomDTO.getType()),
+                roomDTO.getPricePerNight());
+        Room newRoom = roomRepo.save(room);
+        return Optional.of(convertRoomToDTO(newRoom));
+    }
+
+
     public Optional<RoomDTO> updateRoom(String id, RoomDTO roomDTO) {
         Optional<Room> roomOpt = roomRepo.findById(id);
 
@@ -211,4 +225,6 @@ public class HotelService {
 
 
     }
+
+
 }

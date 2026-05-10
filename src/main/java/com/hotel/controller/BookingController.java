@@ -51,6 +51,7 @@ public class BookingController {
         return  hotelService.getRoomById(id);
     }
 
+    //update existig room
     @PutMapping("/rooms/{id}")
     public ResponseEntity<RoomDTO> updateRoom(@PathVariable String id, @RequestBody RoomDTO roomDTO) {
         Optional<RoomDTO> roomOpt = hotelService.updateRoom(id, roomDTO);
@@ -59,6 +60,16 @@ public class BookingController {
             return ResponseEntity.notFound().build();
         }
 
+        return ResponseEntity.ok(roomOpt.get());
+    }
+
+    //create new room
+    @PostMapping("/rooms")
+    public ResponseEntity<RoomDTO> createRoom(@RequestBody RoomDTO roomDTO) {
+        Optional<RoomDTO> roomOpt = hotelService.newRoom(roomDTO);
+        if (roomOpt.isEmpty())  {
+            return ResponseEntity.badRequest().build();
+        }
         return ResponseEntity.ok(roomOpt.get());
     }
 

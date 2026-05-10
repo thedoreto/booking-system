@@ -1,6 +1,10 @@
 package com.hotel.model.util;
 
+import com.hotel.dto.RoomDTO;
+import com.hotel.model.enums.RoomType;
 import com.hotel.service.result.Result;
+
+import java.util.Arrays;
 
 public class ValidationUtil {
     private ValidationUtil() {}
@@ -9,6 +13,11 @@ public class ValidationUtil {
             return Result.failure(message);
         }
         return Result.success();
+    }
+
+    public static boolean isValidRoomType(String s) {
+        return Arrays.stream(RoomType.values())
+                .anyMatch(t -> t.name().equals(s));
     }
 
     public static Result<Void> requireTrue(boolean condition, String message) {
