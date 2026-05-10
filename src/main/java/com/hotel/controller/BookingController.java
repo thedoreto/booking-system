@@ -63,6 +63,12 @@ public class BookingController {
         return ResponseEntity.ok(roomOpt.get());
     }
 
+    @DeleteMapping("/rooms/{id}")
+    public ResponseEntity<Void> deleteRoom(@PathVariable String id) {
+        hotelService.deleteRoom(id);
+        return ResponseEntity.noContent().build();
+    }
+
     //create new room
     @PostMapping("/rooms")
     public ResponseEntity<RoomDTO> createRoom(@RequestBody RoomDTO roomDTO) {
@@ -74,9 +80,9 @@ public class BookingController {
     }
 
     @GetMapping("customers")
-        public List<CustomerDTO>  getAllCustomers() {
-            return hotelService.findAllCustomers();
-        }
+    public List<CustomerDTO>  getAllCustomers() {
+        return hotelService.findAllCustomers();
+    }
 
     @PostMapping("/newBooking")
     public String createBooking(@RequestBody CreateBookingRequest request) {

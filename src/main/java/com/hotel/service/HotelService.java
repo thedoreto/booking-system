@@ -195,6 +195,13 @@ public class HotelService {
                 room.getPricePerNight());
     }
 
+    public void deleteRoom(String id) {
+        Optional<Room> roomOpt = roomRepo.findById(id);
+        if (roomOpt.isEmpty())  {
+            return;
+        }
+        roomRepo.delete(roomOpt.get());
+    }
 
     public Optional<RoomDTO> newRoom(RoomDTO roomDTO) {
         if (roomDTO == null || roomDTO.getRoomNumber() <= 0 || roomDTO.getPricePerNight() < 0
