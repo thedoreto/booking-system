@@ -41,12 +41,14 @@ public class BookingController {
 
     }
 
-    @GetMapping("allRooms")
+    //get all rooms
+    @GetMapping("/rooms")
     public List<RoomDTO> getAll() {
         return hotelService.getAllRooms();
     }
 
-    @GetMapping("rooms/{id}")
+    //get room by id
+    @GetMapping("/rooms/{id}")
     public Optional<RoomDTO> getRoom(@PathVariable String id) {
         return  hotelService.getRoomById(id);
     }
@@ -63,6 +65,7 @@ public class BookingController {
         return ResponseEntity.ok(roomOpt.get());
     }
 
+    //delete a room, if exists
     @DeleteMapping("/rooms/{id}")
     public ResponseEntity<Void> deleteRoom(@PathVariable String id) {
         hotelService.deleteRoom(id);
