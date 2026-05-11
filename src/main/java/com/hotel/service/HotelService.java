@@ -256,10 +256,17 @@ public class HotelService {
     private BookingDTO convertBookingToDTO(Booking booking) {
         System.out.println("start converting booking to DTO");
         System.out.println("room number in booking: [" + booking.getRoomId() + "]");
-        Room  room = roomRepo.findById(booking.getRoomId()).get();
+        Optional<Room>  roomOpt = roomRepo.findById(booking.getRoomId());
+        if (roomOpt.isEmpty())  {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Room not found for booking");
+        }
+        Room room = roomOpt.get();
         System.out.printf("room found for booking: %s", room.getId());
-        Customer customer = customerRepo.findById(booking.getCustomerId())               .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Customer not found for booking"));
+        Optional<Customer> customerOpt = customerRepo.findById(booking.getCustomerId());
+        if (customerOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Customer not found for booking");
+        }
+        Customer customer = customerOpt.get();
         System.out.printf("customer found for booking: %s", customer.getId());
         return new BookingDTO(booking.getId(),
                 booking.getCustomerId(),
