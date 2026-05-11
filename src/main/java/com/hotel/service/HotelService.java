@@ -14,8 +14,10 @@ import com.hotel.repository.CustomerMongoRepository;
 import com.hotel.repository.HotelRepositoty;
 import com.hotel.repository.RoomMongoRepository;
 import com.hotel.service.result.Result;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.codec.CodecConfigurer;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -273,6 +275,14 @@ public class HotelService {
         }
 
         Room room = roomOpt.get();
+
+        if (roomDTO.getRoomNumber() != room.getRoomNumber()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Room number cannot be changed"
+            );
+        }
+
         room.setType(RoomType.valueOf(roomDTO.getType()));
         room.setPricePerNight(roomDTO.getPricePerNight());
 
