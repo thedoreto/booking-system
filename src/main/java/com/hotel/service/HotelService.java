@@ -254,10 +254,13 @@ public class HotelService {
                       String roomType, LocalDate checkInDate, LocalDate checkOutDate, long nights,
                       double totalPrice, String status*/
     private BookingDTO convertBookingToDTO(Booking booking) {
+        System.out.println("start conveting booking to DTO");
         Room  room = roomRepo.findById(booking.getRoomId()).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Room not found for booking"));
+        System.out.printf("room found for booking: %s", room.getId());
         Customer customer = customerRepo.findById(booking.getCustomerId())               .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Customer not found for booking"));
+        System.out.printf("customer found for booking: %s", customer.getId());
         return new BookingDTO(booking.getId(),
                 booking.getCustomerId(),
                 customer.getName(),
