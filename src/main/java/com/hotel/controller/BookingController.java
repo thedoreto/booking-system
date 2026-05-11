@@ -73,7 +73,7 @@ public class BookingController {
     }
 
     //create new room
-    @PostMapping("/rooms/new")
+    @PostMapping("/rooms")
     public ResponseEntity<RoomDTO> createRoom(@RequestBody RoomDTO roomDTO) {
         Optional<RoomDTO> roomOpt = hotelService.newRoom(roomDTO);
         if (roomOpt.isEmpty())  {
@@ -114,7 +114,7 @@ public class BookingController {
     }
 
     //create new customer
-    @PostMapping("/customers/new")
+    @PostMapping("/customers")
     public ResponseEntity<CustomerDTO> createCustomer(@RequestBody CustomerDTO customerDTO) {
         Optional<CustomerDTO> customerOpt = hotelService.newCustomer(customerDTO);
         if (customerOpt.isEmpty())  {
