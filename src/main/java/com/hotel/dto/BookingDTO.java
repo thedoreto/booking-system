@@ -20,19 +20,25 @@ public class BookingDTO {
                       double totalPrice, String status) {
         System.out.println("BookingDTO constructor called with id: " + id);
         this.id = id;
-    //    System.out.printf("BookingDTO constructor - customerId: %s, customerName: %s, roomId: %s, roomNumber: %s, " +
-      //          "roomType: %s, checkInDate: %s, checkOutDate: %s, nights: %d, totalPrice: %.2f, status: %s%n " +
-        //        customerId, customerName, roomId, roomNumber, roomType, checkInDate.toString(),
-          //              checkOutDate.toString(), nights, totalPrice, status);
+        System.out.println("BookingDTO constructor called with customerId: " + customerId);
         this.customerId = customerId;
+        System.out.println("BookingDTO constructor called with customerName: " + customerName);
         this.customerName = customerName;
+        System.out.println("BookingDTO constructor called with roomId: " + roomId);
         this.roomId = roomId;
+        System.out.println("BookingDTO constructor called with roomNumber: " + roomNumber);
         this.roomNumber = roomNumber;
+        System.out.println("BookingDTO constructor called with roomType: " + roomType);
         this.roomType = roomType;
+        System.out.println("BookingDTO constructor called with checkInDate: " + checkInDate);
         this.checkInDate = checkInDate;
+        System.out.println("BookingDTO constructor called with checkOutDate: " + checkOutDate);
         this.checkOutDate = checkOutDate;
+        System.out.println("BookingDTO constructor called with nights: " + nights);
         this.nights = nights;
+        System.out.println("BookingDTO constructor called with totalPrice: " + totalPrice);
         this.totalPrice = totalPrice;
+        System.out.println("BookingDTO constructor called with status: " + status);
         this.status = status;
     }
 
