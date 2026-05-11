@@ -250,11 +250,8 @@ public class HotelService {
         return new CustomerDTO(customer.getId(), customer.getName(), customer.getEmail());
     }
 
-    /*    String customerId, String customerName, String roomId, String roomNumber,
-                      String roomType, LocalDate checkInDate, LocalDate checkOutDate, long nights,
-                      double totalPrice, String status*/
-    private BookingDTO convertBookingToDTO(Booking booking) {
-        System.out.println("start converting booking to DTO");
+      private BookingDTO convertBookingToDTO(Booking booking) {
+        System.out.println("start converting booking to DTO with id:[" + booking.getId() + "]");
         System.out.println("room number in booking: [" + booking.getRoomId() + "]");
         Optional<Room>  roomOpt = roomRepo.findById(booking.getRoomId());
         if (roomOpt.isEmpty())  {
@@ -268,6 +265,9 @@ public class HotelService {
         }
         Customer customer = customerOpt.get();
         System.out.printf("customer found for booking: %s", customer.getId());
+        /*String id, String customerId, String customerName, String roomId, String roomNumber,
+                      String roomType, LocalDate checkInDate, LocalDate checkOutDate, long nights,
+                      double totalPrice, String status*/
         return new BookingDTO(booking.getId(),
                 booking.getCustomerId(),
                 customer.getName(),
