@@ -269,9 +269,9 @@ public class HotelService {
                       String roomType, LocalDate checkInDate, LocalDate checkOutDate, long nights,
                       double totalPrice, String status*/
         return new BookingDTO(booking.getId(),
-                booking.getCustomerId(),
+                customer.getId(),
                 customer.getName(),
-                booking.getRoomId(),
+                room.getId(),
                 String.valueOf(room.getRoomNumber()),
                 room.getType().toString(),
                 booking.getCheckInDate(),
