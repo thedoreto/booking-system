@@ -57,13 +57,6 @@ public class BookingController {
     @PutMapping("/rooms/{id}")
     public ResponseEntity<RoomDTO> updateRoom(@PathVariable String id, @RequestBody RoomDTO roomDTO) {
         Optional<RoomDTO> roomOpt = hotelService.updateRoom(id, roomDTO);
-
-        if (roomOpt.isEmpty()) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(null);
-        }
-
         return ResponseEntity.ok(roomOpt.get());
     }
 
@@ -100,12 +93,6 @@ public class BookingController {
     @PutMapping("/customers/{id}")
     public ResponseEntity<CustomerDTO> updateCustomer(@PathVariable String id, @RequestBody CustomerDTO customerDTO) {
         Optional<CustomerDTO> customerOpt = hotelService.updateCustomer(id, customerDTO);
-
-        if (customerOpt.isEmpty()) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(null);
-        }
 
         return ResponseEntity.ok(customerOpt.get());
     }

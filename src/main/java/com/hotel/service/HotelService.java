@@ -187,21 +187,24 @@ public class HotelService {
     }
 
     public Optional<CustomerDTO> updateCustomer(String id, CustomerDTO customerDTO){
-        Optional<Customer> customerOpt = customerRepo.findById(id);
+        Customer customer = customerRepo.findById(id)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found")
+                );
 
-        if (customerOpt.isEmpty()) {
-            return Optional.empty();
+        // НЕ искам email да се променя
+        if (!customerDTO.getEmail().equals(customer.getEmail())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Email cannot be changed"
+            );
         }
 
-        Customer customer = customerOpt.get();
-
-        if (Objects.equals(customerDTO.getEmail(), customer.getEmail())) {
-            return Optional.empty();
-        }
         customer.setName(customerDTO.getName());
 
         Customer updated = customerRepo.save(customer);
         return Optional.of(convertCustomerToDTO(updated));
+
     }
 
     public void deleteCustomer(String id) {
@@ -272,16 +275,18 @@ public class HotelService {
 
 
     public Optional<RoomDTO> updateRoom(String id, RoomDTO roomDTO) {
-        Optional<Room> roomOpt = roomRepo.findById(id);
 
-        if (roomOpt.isEmpty()) {
-            return Optional.empty();
-        }
+        Room room = roomRepo.findById(id)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found")
+                );
 
-        Room room = roomOpt.get();
-
-        if (roomDTO.getRoomNumber() != room.getRoomNumber()) {
-            return Optional.empty();
+        // не искам roomNumber да се променя
+        if (roomDTO.getRoomNumber() == room.getRoomNumber()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Room number cannot be changed"
+            );
         }
 
         room.setType(RoomType.valueOf(roomDTO.getType()));
@@ -289,8 +294,6 @@ public class HotelService {
 
         Room updated = roomRepo.save(room);
         return Optional.of(convertRoomToDTO(updated));
-
-
     }
 
 
