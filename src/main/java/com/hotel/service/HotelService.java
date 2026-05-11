@@ -230,19 +230,23 @@ public class HotelService {
         Optional<Customer> exists = customerRepo.findByEmail(customerDTO.getEmail());
 
         if (exists.isPresent()) {
+            System.out.println("Email already exists: " + customerDTO.getEmail());
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Email already exists"
             );
         }
 
+        System.out.println("Creating customer with email: " + customerDTO.getEmail() + " name: " + customerDTO.getName());
         Customer customer = new Customer(customerDTO.getName(), customerDTO.getEmail());
+        System.out.printf("saing");
         Customer saved = customerRepo.save(customer);
-
+        System.out.println("saved");
         return convertCustomerToDTO(saved);
     }
 
     private CustomerDTO convertCustomerToDTO(Customer customer) {
+        System.out.println("convertCustomerToDTO: " + customer.getEmail() + " name: " + customer.getName());
         return new CustomerDTO(customer.getId(), customer.getName(), customer.getEmail());
     }
     private BookingDTO convertBookingToDTO(Booking booking) {
