@@ -194,7 +194,8 @@ public class HotelService {
         }
 
         Customer customer = customerOpt.get();
-        if (customerDTO.getEmail() != customer.getEmail()) {
+
+        if (Objects.equals(customerDTO.getEmail(), customer.getEmail())) {
             return Optional.empty();
         }
         customer.setName(customerDTO.getName());
