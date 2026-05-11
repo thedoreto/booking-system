@@ -214,19 +214,33 @@ public class HotelService {
         }
         customerRepo.delete(customerOpt.get());
     }
-    public Optional<CustomerDTO> newCustomer(CustomerDTO customerDTO) {
-        if (customerDTO == null || customerDTO.getName() == null || customerDTO.getName().isEmpty()
-                || customerDTO.getEmail() == null || customerDTO.getEmail().isEmpty()) {
-            return Optional.empty();
+
+    public CustomerDTO newCustomer(CustomerDTO customerDTO) {
+
+        if (customerDTO == null
+                || customerDTO.getName() == null || customerDTO.getName().isBlank()
+                || customerDTO.getEmail() == null || customerDTO.getEmail().isBlank()) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Name and email are required"
+            );
         }
-        List<Customer> exists = customerRepo.findByEmail(customerDTO.getEmail());
-        if (!exists.isEmpty()) {
-            return Optional.empty();
+
+        Optional<Customer> exists = customerRepo.findByEmail(customerDTO.getEmail());
+
+        if (exists.isPresent()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Email already exists"
+            );
         }
+
         Customer customer = new Customer(customerDTO.getName(), customerDTO.getEmail());
-        Customer newCustomer = customerRepo.save(customer);
-        return Optional.of(convertCustomerToDTO(newCustomer));
-     }
+        Customer saved = customerRepo.save(customer);
+
+        return convertCustomerToDTO(saved);
+    }
 
     private CustomerDTO convertCustomerToDTO(Customer customer) {
         return new CustomerDTO(customer.getId(), customer.getName(), customer.getEmail());
@@ -282,7 +296,7 @@ public class HotelService {
                 );
 
         // не искам roomNumber да се променя
-        if (roomDTO.getRoomNumber() == room.getRoomNumber()) {
+        if (roomDTO.getRoomNumber() != room.getRoomNumber()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Room number cannot be changed"

@@ -107,11 +107,8 @@ public class BookingController {
     //create new customer
     @PostMapping("/customers")
     public ResponseEntity<CustomerDTO> createCustomer(@RequestBody CustomerDTO customerDTO) {
-        Optional<CustomerDTO> customerOpt = hotelService.newCustomer(customerDTO);
-        if (customerOpt.isEmpty())  {
-            return ResponseEntity.badRequest().build();
-        }
-        return ResponseEntity.ok(customerOpt.get());
+        CustomerDTO customer = hotelService.newCustomer(customerDTO);
+        return ResponseEntity.ok(customer);
     }
 
     @PostMapping("/newBooking")
