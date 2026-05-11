@@ -14,6 +14,7 @@ import com.hotel.repository.CustomerMongoRepository;
 import com.hotel.repository.HotelRepositoty;
 import com.hotel.repository.RoomMongoRepository;
 import com.hotel.service.result.Result;
+import org.springframework.http.codec.CodecConfigurer;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -182,6 +183,41 @@ public class HotelService {
 
         return Optional.of(convertCustomerToDTO(customerOpt.get()));
     }
+
+    public Optional<CustomerDTO> updateCustomer(String id, CustomerDTO customerDTO){
+        Optional<Customer> customerOpt = customerRepo.findById(id);
+
+        if (customerOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Customer customer = customerOpt.get();
+        customer.setName(customerDTO.getName());
+
+        Customer updated = customerRepo.save(customer);
+        return Optional.of(convertCustomerToDTO(updated));
+    }
+
+    public void deleteCustomer(String id) {
+        Optional<Customer> customerOpt = customerRepo.findById(id);
+        if (customerOpt.isEmpty())  {
+            return;
+        }
+        customerRepo.delete(customerOpt.get());
+    }
+    public Optional<CustomerDTO> newCustomer(CustomerDTO customerDTO) {
+        if (customerDTO == null || customerDTO.getName() == null || customerDTO.getName().isEmpty()
+                || customerDTO.getEmail() == null || customerDTO.getEmail().isEmpty()) {
+            return Optional.empty();
+        }
+        List<Customer> exists = customerRepo.findByEmail(customerDTO.getEmail());
+        if (!exists.isEmpty()) {
+            return Optional.empty();
+        }
+        Customer customer = new Customer(customerDTO.getName(), customerDTO.getEmail());
+        Customer newCustomer = customerRepo.save(customer);
+        return Optional.of(convertCustomerToDTO(newCustomer));
+     }
 
     private CustomerDTO convertCustomerToDTO(Customer customer) {
         return new CustomerDTO(customer.getId(), customer.getName(), customer.getEmail());

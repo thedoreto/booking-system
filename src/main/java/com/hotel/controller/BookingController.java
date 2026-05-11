@@ -73,21 +73,54 @@ public class BookingController {
     }
 
     //create new room
-    @PostMapping("/rooms")
+    @PostMapping("/rooms/new")
     public ResponseEntity<RoomDTO> createRoom(@RequestBody RoomDTO roomDTO) {
         Optional<RoomDTO> roomOpt = hotelService.newRoom(roomDTO);
         if (roomOpt.isEmpty())  {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok(roomOpt.get());
-    }@GetMapping("customers/{id}")
+    }
+
+    //get all customers
+    @GetMapping("customers")
+    public List<CustomerDTO>  getAllCustomers() {
+        return hotelService.findAllCustomers();
+    }
+
+    //get customer by id
+    @GetMapping("customers/{id}")
     public Optional<CustomerDTO> getCustomer(@PathVariable String id) {
         return  hotelService.getCustomerById(id);
     }
 
-    @GetMapping("customers")
-    public List<CustomerDTO>  getAllCustomers() {
-        return hotelService.findAllCustomers();
+    //update existig customer
+    @PutMapping("/customers/{id}")
+    public ResponseEntity<CustomerDTO> updateCustomer(@PathVariable String id, @RequestBody CustomerDTO customerDTO) {
+        Optional<CustomerDTO> customerOpt = hotelService.updateCustomer(id, customerDTO);
+
+        if (customerOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(customerOpt.get());
+    }
+
+    //delete a customer, if exists
+    @DeleteMapping("/customers/{id}")
+    public ResponseEntity<Void> deleteCustomer(@PathVariable String id) {
+        hotelService.deleteCustomer(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    //create new customer
+    @PostMapping("/customers/new")
+    public ResponseEntity<CustomerDTO> createCustomer(@RequestBody CustomerDTO customerDTO) {
+        Optional<CustomerDTO> customerOpt = hotelService.newCustomer(customerDTO);
+        if (customerOpt.isEmpty())  {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(customerOpt.get());
     }
 
     @PostMapping("/newBooking")

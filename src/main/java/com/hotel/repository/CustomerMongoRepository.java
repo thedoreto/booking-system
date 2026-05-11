@@ -4,11 +4,14 @@ import com.hotel.model.Customer;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface CustomerMongoRepository
         extends MongoRepository<Customer, String> {
 
-    Optional<Customer> findByName(String name);
+
+    List<Customer> findByEmail(String email);
+
 }
