@@ -59,7 +59,9 @@ public class BookingController {
         Optional<RoomDTO> roomOpt = hotelService.updateRoom(id, roomDTO);
 
         if (roomOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity
+                    .badRequest()
+                    .body(null);
         }
 
         return ResponseEntity.ok(roomOpt.get());
@@ -100,7 +102,9 @@ public class BookingController {
         Optional<CustomerDTO> customerOpt = hotelService.updateCustomer(id, customerDTO);
 
         if (customerOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity
+                    .badRequest()
+                    .body(null);
         }
 
         return ResponseEntity.ok(customerOpt.get());

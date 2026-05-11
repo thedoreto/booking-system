@@ -195,10 +195,7 @@ public class HotelService {
 
         Customer customer = customerOpt.get();
         if (customerDTO.getEmail() != customer.getEmail()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Customer email cannot be changed"
-            );
+            return Optional.empty();
         }
         customer.setName(customerDTO.getName());
 
@@ -283,10 +280,7 @@ public class HotelService {
         Room room = roomOpt.get();
 
         if (roomDTO.getRoomNumber() != room.getRoomNumber()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Room number cannot be changed"
-            );
+            return Optional.empty();
         }
 
         room.setType(RoomType.valueOf(roomDTO.getType()));
