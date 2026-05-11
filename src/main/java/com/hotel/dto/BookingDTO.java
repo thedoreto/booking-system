@@ -20,10 +20,10 @@ public class BookingDTO {
                       double totalPrice, String status) {
         System.out.println("BookingDTO constructor called with id: " + id);
         this.id = id;
-        System.out.printf("/nBookingDTO constructor - customerId: %s, customerName: %s, roomId: %s, roomNumber: %s, " +
-                "roomType: %s, checkInDate: %s, checkOutDate: %s, nights: %d, totalPrice: %.2f, status: %s%n /n" +
-                customerId, customerName, roomId, roomNumber, roomType, checkInDate.toString(),
-                        checkOutDate.toString(), nights, totalPrice, status);
+    //    System.out.printf("BookingDTO constructor - customerId: %s, customerName: %s, roomId: %s, roomNumber: %s, " +
+      //          "roomType: %s, checkInDate: %s, checkOutDate: %s, nights: %d, totalPrice: %.2f, status: %s%n " +
+        //        customerId, customerName, roomId, roomNumber, roomType, checkInDate.toString(),
+          //              checkOutDate.toString(), nights, totalPrice, status);
         this.customerId = customerId;
         this.customerName = customerName;
         this.roomId = roomId;
