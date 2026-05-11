@@ -174,6 +174,15 @@ public class HotelService {
                 .toList();
     }
 
+    public Optional<CustomerDTO> getCustomerById(String id) {
+        Optional<Customer> customerOpt = customerRepo.findById(id);
+        if (customerOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(convertCustomerToDTO(customerOpt.get()));
+    }
+
     private CustomerDTO convertCustomerToDTO(Customer customer) {
         return new CustomerDTO(customer.getId(), customer.getName(), customer.getEmail());
     }

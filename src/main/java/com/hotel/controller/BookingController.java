@@ -80,6 +80,9 @@ public class BookingController {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok(roomOpt.get());
+    }@GetMapping("customers/{id}")
+    public Optional<CustomerDTO> getCustomer(@PathVariable String id) {
+        return  hotelService.getCustomerById(id);
     }
 
     @GetMapping("customers")
