@@ -194,6 +194,12 @@ public class HotelService {
         }
 
         Customer customer = customerOpt.get();
+        if (customerDTO.getEmail() != customer.getEmail()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Customer email cannot be changed"
+            );
+        }
         customer.setName(customerDTO.getName());
 
         Customer updated = customerRepo.save(customer);
