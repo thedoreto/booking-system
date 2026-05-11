@@ -249,10 +249,21 @@ public class HotelService {
         System.out.println("convertCustomerToDTO: " + customer.getEmail() + " name: " + customer.getName());
         return new CustomerDTO(customer.getId(), customer.getName(), customer.getEmail());
     }
+
+    /*    String customerId, String customerName, String roomId, String roomNumber,
+                      String roomType, LocalDate checkInDate, LocalDate checkOutDate, long nights,
+                      double totalPrice, String status*/
     private BookingDTO convertBookingToDTO(Booking booking) {
+        Room  room = roomRepo.findById(booking.getRoomId()).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Room not found for booking"));
+        Customer customer = customerRepo.findById(booking.getCustomerId())               .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Customer not found for booking"));
         return new BookingDTO(booking.getId(),
                 booking.getCustomerId(),
+                customer.getName(),
                 booking.getRoomId(),
+                String.valueOf(room.getRoomNumber()),
+                room.getType().toString(),
                 booking.getCheckInDate(),
                 booking.getCheckOutDate(),
                 booking.getNights(),
