@@ -138,7 +138,7 @@ public class BookingController {
                     .body(null);
         }
         return ResponseEntity.ok(result.getData());) {*/
-    return null;// ResponseEntity.ok(hotelService.cancelBooking(id));
+    return ResponseEntity.ok(hotelService.cancelBooking(id));
 
     }
     @GetMapping("/booking")

@@ -74,28 +74,18 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
 
     return convertBookingToDTO(bookingRepo.save(booking));
 }
-
-    public Result<Void> cancelBooking(Booking booking) {
-        if (booking == null) {
-            return Result.failure("Invalid booking");
+    public BookingDTO cancelBooking(String bookingId) {
+        Optional<Booking> bookingOpt = bookingRepo.findById(bookingId);
+        if (bookingOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking not found");
+        }
+         Booking booking = bookingOpt.get();
+        if (booking.getStatus() == BookingStatus.CANCELED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking is already canceled");
         }
         booking.setStatus(BookingStatus.CANCELED);
-        /*  boolean removedFromRepo = repo.getBookings().remove(booking);
-        List<Booking> roomBookings = bookingsByRoomId.get(booking.getRoom().getId());
-        boolean removedFromMap = roomBookings.remove(booking);
-        if (!removedFromRepo && !removedFromMap) {
-            return Result.failure("Booking doesn't exists");
-        } */
-        return Result.success();
-    }
-
-    public Result<Void> cancelBooking(String bookingId) {
-        Optional<Booking> bookingOpt = bookingRepo.findById(bookingId);
-     //   Optional<Booking> bookingOpt = repo.getBookings().stream()                .filter(b -> Objects.equals(b.getId(), bookingId)).findFirst();
-        if (bookingOpt.isEmpty()) {
-            return Result.failure("Booking doesn't exists");
-        }
-        return cancelBooking(bookingOpt.get());
+        bookingRepo.save(booking);
+        return convertBookingToDTO(booking);
     }
 
     public Result<List<Booking>> getBookingsByCustomer(Customer customer) {
