@@ -43,14 +43,18 @@ public class BookingController {
 
     //get all rooms
     @GetMapping("/rooms")
-    public List<RoomDTO> getAll() {
-        return hotelService.getAllRooms();
+    public ResponseEntity<List<RoomDTO>> getAll() {
+        return ResponseEntity.ok(hotelService.getAllRooms());
     }
 
     //get room by id
     @GetMapping("/rooms/{id}")
-    public Optional<RoomDTO> getRoom(@PathVariable String id) {
-        return  hotelService.getRoomById(id);
+    public ResponseEntity<RoomDTO> getRoom(@PathVariable String id) {
+        Optional<RoomDTO> roomOpt = hotelService.getRoomById(id);
+        if (roomOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(roomOpt.get());
     }
 
     //update existig room
@@ -110,14 +114,33 @@ public class BookingController {
         CustomerDTO customer = hotelService.newCustomer(customerDTO);
         return ResponseEntity.ok(customer);
     }
+/*{
+  "customerId": "...",
+  "roomId": "...",
+  "checkInDate": "2026-05-20",
+  "checkOutDate": "2026-05-25"
+}*/
+    @PostMapping("/bookings")
+    public ResponseEntity<BookingDTO> createBooking(@RequestBody BookingDTO bookingDTO) {
+        BookingDTO result = hotelService.createBooking(bookingDTO);
+        return ResponseEntity.ok(result);
 
-    @PostMapping("/newBooking")
-    public String createBooking(@RequestBody CreateBookingRequest request) {
-  //      var result = hotelService.createBooking(request.checkInDate, request.checkOutDate, request.customer, request.room);
-   //     return result.isSuccess() ? "Booking created" : "Booking failed";
-        return "Create new Booking";
     }
 
+
+    /*PUT /bookings/{id}/cancel*/
+    @PutMapping("/bookings/{id}/cancel")
+    public ResponseEntity<BookingDTO> cancelBooking(@PathVariable String id) {
+     /*   Result<BookingDTO> result = hotelService.cancelBooking(id);
+        if (!result.isSuccess()) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(null);
+        }
+        return ResponseEntity.ok(result.getData());) {*/
+    return null;// ResponseEntity.ok(hotelService.cancelBooking(id));
+
+    }
     @GetMapping("/booking")
     public Object getBookingByCustomer(@RequestParam String name, @RequestParam String email) {
        // Customer customer = new Customer(name, email);
@@ -126,7 +149,7 @@ public class BookingController {
     }
 
     @GetMapping("/bookings")
-    public List<BookingDTO> getBookingByCustomer() {
+    public List<BookingDTO> getAllBookings() {
         System.out.println("Start get bookings");
         return hotelService.getAllBookings();
     }

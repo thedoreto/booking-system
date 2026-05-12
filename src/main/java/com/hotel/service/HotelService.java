@@ -38,23 +38,42 @@ public class HotelService {
         this.bookingRepo = bookingRepo;
         rebuildIndex();
     }
+//String checkInString, String  checkOutString, String customerId, String roomId
+public BookingDTO createBooking(BookingDTO bookingDTO) {
 
-    public Result<Booking> createBooking(String checkInString, String  checkOutString, Customer customer, Room room) {
-        if (customer == null || room == null) {
-            return Result.failure("Invalid input");
-        }
-        LocalDate checkInDate = LocalDate.parse(checkInString);
-        LocalDate checkOutDate = LocalDate.parse(checkOutString);
-        if (!isValidPeriod(checkInDate, checkOutDate)) {
-            return Result.failure("Invalid dates");
-        }
-        if (!isRoomAvailable(room, checkInDate, checkOutDate)) {
-            return Result.failure("Booking not done");
-        }
-        Booking booking = new Booking(customer.getId(), room, checkInString, checkOutString);
-        bookingsByRoomId.computeIfAbsent(room.getId(), k -> new ArrayList<>()).add(booking);
-        return Result.success(booking);
+    if (bookingDTO == null) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid booking");
     }
+
+    String customerId = bookingDTO.getCustomerId();
+    String roomId = bookingDTO.getRoomId();
+
+    if (customerId == null || roomId == null ||
+            customerId.isBlank() || roomId.isBlank()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input");
+    }
+
+    LocalDate checkInDate = bookingDTO.getCheckInDate();
+    LocalDate checkOutDate = bookingDTO.getCheckOutDate();
+
+    if (!isValidPeriod(checkInDate, checkOutDate)) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid dates");
+    }
+
+    if (!isRoomAvailable(roomId, checkInDate, checkOutDate)) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room not available");
+    }
+
+    Customer customer = customerRepo.findById(customerId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer not found"));
+
+    Room room = roomRepo.findById(roomId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room not found"));
+
+    Booking booking = new Booking(customerId, room, checkInDate.toString(), checkOutDate.toString());
+
+    return convertBookingToDTO(bookingRepo.save(booking));
+}
 
     public Result<Void> cancelBooking(Booking booking) {
         if (booking == null) {
@@ -91,12 +110,15 @@ public class HotelService {
         return Result.success(bookings);
     }
 
-    public boolean isRoomAvailable(Room room, LocalDate from, LocalDate to) {
-    /*     repo.getBookings().stream()
-                .filter(b -> b.getStatus() == BookingStatus.CONFIRMED)
-                .filter(b -> Objects.equals(b.getRoomId(), room.getId()))
-                .noneMatch(b -> isOverlap(from, to, b.getCheckInDate(), b.getCheckOutDate()));*/
-         return false;
+
+
+    private boolean isRoomAvailable(String roomId, LocalDate from, LocalDate to) {
+        return bookingRepo
+                .findByRoomIdAndStatus(roomId, BookingStatus.CONFIRMED)
+                .stream()
+                .noneMatch(b ->
+                        isOverlap(from, to, b.getCheckInDate(), b.getCheckOutDate())
+                );
     }
 
     private boolean isValidPeriod(LocalDate from, LocalDate to) {
@@ -162,7 +184,7 @@ public class HotelService {
         }
 
         List<RoomDTO> rooms = roomRepo.findAll().stream()
-                .filter(room -> isRoomAvailable(room, checkInDate, checkOutDate))
+                .filter(room -> isRoomAvailable(room.getId(), checkInDate, checkOutDate))
                 .map(this::convertRoomToDTO)
                 .toList();
 
