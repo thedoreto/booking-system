@@ -112,7 +112,8 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
     }
 
     private boolean isValidPeriod(LocalDate from, LocalDate to) {
-        return from != null && to != null && from.isBefore(to);
+        return from != null && to != null
+                && !from.isAfter(to) && from.isAfter(LocalDate.now());
     }
     private void rebuildIndex() {
         bookingsByRoomId.clear();
