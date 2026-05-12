@@ -11,11 +11,9 @@ import com.hotel.model.enums.RoomType;
 import com.hotel.model.util.ValidationUtil;
 import com.hotel.repository.BookingMongoRepository;
 import com.hotel.repository.CustomerMongoRepository;
-import com.hotel.repository.HotelRepositoty;
 import com.hotel.repository.RoomMongoRepository;
 import com.hotel.service.result.Result;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.codec.CodecConfigurer;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -25,7 +23,6 @@ import java.util.stream.Stream;
 
 @Service
 public class HotelService {
- //   private HotelRepositoty repo;
 
     private RoomMongoRepository roomRepo;
     private CustomerMongoRepository customerRepo;
@@ -252,9 +249,10 @@ public class HotelService {
 
       private BookingDTO convertBookingToDTO(Booking booking) {
         System.out.println("start converting booking to DTO with id:[" + booking.getId() + "]");
-        System.out.println("room number in booking: [" + booking.getRoomId() + "]");
+        System.out.println("room id in booking: [" + booking.getRoomId() + "]");
         Optional<Room>  roomOpt = roomRepo.findById(booking.getRoomId());
         if (roomOpt.isEmpty())  {
+            System.out.println("Room is empty");
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Room not found for booking");
         }
         Room room = roomOpt.get();
