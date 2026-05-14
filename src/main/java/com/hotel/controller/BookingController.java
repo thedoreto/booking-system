@@ -154,6 +154,21 @@ public class BookingController {
         return hotelService.getAllBookings();
     }
 
+    @GetMapping("/bookings/active")
+    public List<BookingDTO> getActiveBookings() {
+        return hotelService.getActiveBookings();
+    }
+
+    @GetMapping("/bookings/future")
+    public List<BookingDTO> getFutureBookings() {
+        return hotelService.getFutureBookings();
+    }
+
+    @GetMapping("/bookings/history")
+    public List<BookingDTO> getHistoryBookings() {
+        return hotelService.getHistoryBookings();
+    }
+
     public static class CreateBookingRequest {
         public LocalDate checkInDate;
         public LocalDate checkOutDate;

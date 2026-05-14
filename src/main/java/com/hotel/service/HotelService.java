@@ -350,4 +350,18 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
     }
 
 
+    public List<BookingDTO> getActiveBookings() {
+        return bookingRepo.findByCheckInDateGreaterThanEqualAndStatus(
+                LocalDate.now(),
+                BookingStatus.CONFIRMED
+        );
+    }
+
+    public List<BookingDTO> getFutureBookings() {
+        return bookingRepo.findByCheckInDateGreaterThanEqual(LocalDate.now());
+    }
+
+    public List<BookingDTO> getHistoryBookings() {
+        return bookingRepo.findByCheckInDateLessThan(LocalDate.now());
+    }
 }

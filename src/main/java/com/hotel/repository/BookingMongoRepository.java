@@ -1,5 +1,6 @@
 package com.hotel.repository;
 
+import com.hotel.dto.BookingDTO;
 import com.hotel.model.Booking;
 import com.hotel.model.enums.BookingStatus;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -27,4 +28,10 @@ public interface BookingMongoRepository
     List<Booking> findByRoomIdAndStatus(String roomId, BookingStatus bookingStatus);
 
     List<Booking>  findByCustomerIdAndRoomId(String customerId, String roomId);
+
+    List<BookingDTO> findByCheckInDateGreaterThanEqualAndStatus(LocalDate now, BookingStatus bookingStatus);
+
+    List<BookingDTO> findByCheckInDateGreaterThanEqual(LocalDate now);
+
+    List<BookingDTO> findByCheckInDateLessThan(LocalDate now);
 }
