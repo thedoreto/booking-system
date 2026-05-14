@@ -213,12 +213,12 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
     public void deleteCustomer(String id) {
         Optional<Customer> customerOpt = customerRepo.findById(id);
         if (customerOpt.isEmpty())  {
-            return;
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found");
         }
         List<Booking> bookings = bookingRepo.findByCustomerIdAndCheckInDateGreaterThanEqualAndStatus(
                 id, LocalDate.now(), BookingStatus.CONFIRMED);
         if (bookings != null && !bookings.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer has active bookings");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete this customer - has active bookings");
         }
         customerRepo.delete(customerOpt.get());
     }
@@ -300,7 +300,12 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
     public void deleteRoom(String id) {
         Optional<Room> roomOpt = roomRepo.findById(id);
         if (roomOpt.isEmpty())  {
-            return;
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found");
+        }
+        List<Booking> bookings = bookingRepo.findByroomIdAndCheckInDateGreaterThanEqualAndStatus(
+                id, LocalDate.now(), BookingStatus.CONFIRMED);
+        if (bookings != null && !bookings.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete this room - has active bookings");
         }
         roomRepo.delete(roomOpt.get());
     }
