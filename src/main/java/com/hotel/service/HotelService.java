@@ -88,19 +88,15 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
         return convertBookingToDTO(booking);
     }
 
-    public Result<List<Booking>> getBookingsByCustomer(Customer customer) {
-        if (customer == null ) return Result.failure("Invalid Customer");
-        List<Booking> bookings = bookingRepo.findByCustomerId(customer.getId());
-        return Result.success(bookings);
+    public List<BookingDTO> getBookingByCustomerIdAndRoomId(String customerId, String roomId) {
+        List<Booking> bookings = bookingRepo.findBookingByCustomerIdAndRoomId(customerId, roomId);
+        if (bookings == null && bookings.isEmpty())    {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No bookings found for customer and room");
+        }
+        return bookings.stream()
+                .map(this::convertBookingToDTO)
+                .toList();
     }
-
-    public Result<List<Booking>> getBookingsByRoom(Room room) {
-        if (room == null) return Result.failure("Room doesn't exists");
-        List<Booking> bookings = bookingsByRoomId.getOrDefault(room.getId(), List.of());
-        return Result.success(bookings);
-    }
-
-
 
     private boolean isRoomAvailable(String roomId, LocalDate from, LocalDate to) {
         return bookingRepo
@@ -204,10 +200,7 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
 
         // НЕ искам email да се променя
         if (!customerDTO.getEmail().equals(customer.getEmail())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Email cannot be changed"
-            );
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email cannot be changed");
         }
 
         customer.setName(customerDTO.getName());

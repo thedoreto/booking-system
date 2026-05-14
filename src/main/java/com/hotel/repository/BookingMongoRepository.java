@@ -23,4 +23,6 @@ public interface BookingMongoRepository
      List<Booking> findByStatus(String status);
 
     List<Booking> findByRoomIdAndStatus(String roomId, BookingStatus bookingStatus);
+
+    List<Booking>  findBookingByCustomerIdAndRoomId(String customerId, String roomId);
 }
