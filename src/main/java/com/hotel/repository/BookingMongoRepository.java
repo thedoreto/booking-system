@@ -5,6 +5,7 @@ import com.hotel.model.enums.BookingStatus;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -16,7 +17,7 @@ public interface BookingMongoRepository
             String status
     );
 
-    List<Booking> findByCustomerId(String customerId);
+    List<Booking> findByCustomerIdAndCheckInDateGreaterThanEqualAndStatus(String id, LocalDate date, BookingStatus status);
 
     List<Booking> findByRoomId(String roomId);
 
@@ -24,5 +25,5 @@ public interface BookingMongoRepository
 
     List<Booking> findByRoomIdAndStatus(String roomId, BookingStatus bookingStatus);
 
-    List<Booking>  findBookingByCustomerIdAndRoomId(String customerId, String roomId);
+    List<Booking>  findByCustomerIdAndRoomId(String customerId, String roomId);
 }

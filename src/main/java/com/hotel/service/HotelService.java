@@ -89,7 +89,7 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
     }
 
     public List<BookingDTO> getBookingByCustomerIdAndRoomId(String customerId, String roomId) {
-        List<Booking> bookings = bookingRepo.findBookingByCustomerIdAndRoomId(customerId, roomId);
+        List<Booking> bookings = bookingRepo.findByCustomerIdAndRoomId(customerId, roomId);
         if (bookings == null && bookings.isEmpty())    {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No bookings found for customer and room");
         }
@@ -214,6 +214,11 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
         Optional<Customer> customerOpt = customerRepo.findById(id);
         if (customerOpt.isEmpty())  {
             return;
+        }
+        List<Booking> bookings = bookingRepo.findByCustomerIdAndCheckInDateGreaterThanEqualAndStatus(
+                id, LocalDate.now(), BookingStatus.CONFIRMED);
+        if (bookings != null && !bookings.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer has active bookings");
         }
         customerRepo.delete(customerOpt.get());
     }
