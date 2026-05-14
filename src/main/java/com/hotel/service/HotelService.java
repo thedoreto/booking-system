@@ -354,14 +354,22 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
         return bookingRepo.findByCheckInDateGreaterThanEqualAndStatus(
                 LocalDate.now(),
                 BookingStatus.CONFIRMED
-        );
+        ).stream()
+                .map(this::convertBookingToDTO)
+                .toList();
     }
 
     public List<BookingDTO> getFutureBookings() {
-        return bookingRepo.findByCheckInDateGreaterThanEqual(LocalDate.now());
+        return bookingRepo.findByCheckInDateGreaterThanEqual(LocalDate.now())
+                .stream()
+                .map(this::convertBookingToDTO)
+                .toList();
     }
 
     public List<BookingDTO> getHistoryBookings() {
-        return bookingRepo.findByCheckInDateLessThan(LocalDate.now());
+        return bookingRepo.findByCheckInDateLessThan(LocalDate.now())
+                .stream()
+                .map(this::convertBookingToDTO)
+                .toList();
     }
 }
