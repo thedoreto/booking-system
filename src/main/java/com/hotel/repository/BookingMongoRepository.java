@@ -21,10 +21,6 @@ public interface BookingMongoRepository
     List<Booking> findByCustomerIdAndCheckInDateGreaterThanEqualAndStatus(String id, LocalDate date, BookingStatus status);
     List<Booking> findByroomIdAndCheckInDateGreaterThanEqualAndStatus(String roomId, LocalDate date, BookingStatus status);
 
-    List<Booking> findByRoomId(String roomId);
-
-     List<Booking> findByStatus(String status);
-
     List<Booking> findByRoomIdAndStatus(String roomId, BookingStatus bookingStatus);
 
     List<Booking>  findByCustomerIdAndRoomId(String customerId, String roomId);
@@ -34,4 +30,8 @@ public interface BookingMongoRepository
     List<Booking> findByCheckInDateGreaterThanEqual(LocalDate now);
 
     List<Booking> findByCheckInDateLessThan(LocalDate now);
+
+    List<Booking> findByCustomerId(String id);
+
+    List<Booking> findByroomId(String id);
 }

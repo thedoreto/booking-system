@@ -215,8 +215,7 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
         if (customerOpt.isEmpty())  {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found");
         }
-        List<Booking> bookings = bookingRepo.findByCustomerIdAndCheckInDateGreaterThanEqualAndStatus(
-                id, LocalDate.now(), BookingStatus.CONFIRMED);
+        List<Booking> bookings = bookingRepo.findByCustomerId(id);
         if (bookings != null && !bookings.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete this customer - has active bookings");
         }
@@ -302,8 +301,7 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
         if (roomOpt.isEmpty())  {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found");
         }
-        List<Booking> bookings = bookingRepo.findByroomIdAndCheckInDateGreaterThanEqualAndStatus(
-                id, LocalDate.now(), BookingStatus.CONFIRMED);
+        List<Booking> bookings = bookingRepo.findByroomId(id);
         if (bookings != null && !bookings.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete this room - has active bookings");
         }
