@@ -57,6 +57,18 @@ public class BookingController {
         return ResponseEntity.ok(roomOpt.get());
     }
 
+    @GetMapping("/")
+    public String start() {
+        return """
+        <html>
+          <body>
+            <p>OK - Spring is running</p>
+            <a href="https://booking-ui-81fb.onrender.com/">Open app</a>
+          </body>
+        </html>
+    """;
+    }
+
     //update existig room
     @PutMapping("/rooms/{id}")
     public ResponseEntity<RoomDTO> updateRoom(@PathVariable String id, @RequestBody RoomDTO roomDTO) {
