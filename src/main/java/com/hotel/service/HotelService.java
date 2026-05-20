@@ -290,6 +290,7 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
     }
 
     private RoomDTO convertRoomToDTO(Room room) {
+        System.out.println("Room number: " + room.getRoomNumber() + " images: " + room.getImageIds().size());
         return new RoomDTO(room.getId(),
                 room.getRoomNumber(),
                 room.getType().toString(),
