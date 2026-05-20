@@ -16,17 +16,17 @@ public class Room {
     private int roomNumber;
     private RoomType type;  // SINGLE, DOUBLE, APARTMENT
     private double pricePerNight;
-    private List<String> images = new ArrayList<>();
+    private List<String> imageIds = new ArrayList<>();
 
     public Room() {
         // REQUIRED by Spring Data Mongo
     }
 
-    public Room(int roomNumber, RoomType type, double pricePerNight, List<String> images) {
+    public Room(int roomNumber, RoomType type, double pricePerNight, List<String> imageIds) {
         this.roomNumber = roomNumber;
         this.type = type;
         this.pricePerNight = pricePerNight;
-        this.images = images;
+        this.imageIds = imageIds;
     }
 
     public String getId() {
@@ -59,11 +59,13 @@ public class Room {
         this.pricePerNight = pricePerNight;
     }
 
-    public List<String> getImages() { return images; }
+    public List<String> getImageIds() { return imageIds; }
 
-    public void setImages(List<String> images) { this.images = images; }
 
-    public void addImage(String aImage) {
-        images.add(aImage);
+    public void setImageIds(List<String> imageIds) { this.imageIds = imageIds; }
+
+    public void addImageId(String aImageId) {
+        imageIds.add(aImageId);
+
     }
 }

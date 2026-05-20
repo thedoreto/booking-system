@@ -9,14 +9,14 @@ public class RoomDTO {
     private int roomNumber;
     private String type;//SINGLE, DOUBLE, APARTMENT
     private double pricePerNight;
-    private List<String> images = new ArrayList<>();
+    private List<String> imageIds = new ArrayList<>();
 
-    public RoomDTO(String id, int roomNumber, String type, double pricePerNight, List<String> images) {
+    public RoomDTO(String id, int roomNumber, String type, double pricePerNight, List<String> imageIds) {
         this.id = id;
         this.roomNumber = roomNumber;
         this.type = type;
         this.pricePerNight = pricePerNight;
-        this.images = images;
+        this.imageIds = imageIds;
     }
 
     public String getId() {
@@ -51,7 +51,6 @@ public class RoomDTO {
         this.pricePerNight = pricePerNight;
     }
 
-    public List<String> getImages() { return images; }
-
-    public void setImages(List<String> images) { this.images = images; }
+    public List<String> getImageIds() { return imageIds; }
+    public void setImageIds(List<String> imageIds) { this.imageIds = imageIds; }
 }

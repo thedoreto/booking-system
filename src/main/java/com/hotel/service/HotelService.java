@@ -294,7 +294,7 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
                 room.getRoomNumber(),
                 room.getType().toString(),
                 room.getPricePerNight(),
-                room.getImages());
+                room.getImageIds());
     }
 
     public void deleteRoom(String id) {
@@ -321,7 +321,7 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
         Room room = new Room(roomDTO.getRoomNumber(),
                 RoomType.valueOf(roomDTO.getType()),
                 roomDTO.getPricePerNight(),
-                roomDTO.getImages());
+                roomDTO.getImageIds());
         Room newRoom = roomRepo.save(room);
         return Optional.of(convertRoomToDTO(newRoom));
     }
