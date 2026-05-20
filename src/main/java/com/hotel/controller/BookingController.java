@@ -2,6 +2,7 @@ package com.hotel.controller;
 
 import com.hotel.dto.BookingDTO;
 import com.hotel.dto.CustomerDTO;
+import com.hotel.dto.ImageDTO;
 import com.hotel.dto.RoomDTO;
 import com.hotel.model.Customer;
 import com.hotel.model.Room;
@@ -41,6 +42,18 @@ public class BookingController {
 
     }
 
+    @GetMapping("/home")
+    public String start() {
+        return """
+        <html>
+          <body>
+            <p>OK - Spring is running</p>
+            <a href="https://booking-ui-81fb.onrender.com/">Open app</a>
+          </body>
+        </html>
+    """;
+    }
+
     //get all rooms
     @GetMapping("/rooms")
     public ResponseEntity<List<RoomDTO>> getAll() {
@@ -57,17 +70,6 @@ public class BookingController {
         return ResponseEntity.ok(roomOpt.get());
     }
 
-    @GetMapping("/home")
-    public String start() {
-        return """
-        <html>
-          <body>
-            <p>OK - Spring is running</p>
-            <a href="https://booking-ui-81fb.onrender.com/">Open app</a>
-          </body>
-        </html>
-    """;
-    }
 
     //update existig room
     @PutMapping("/rooms/{id}")
@@ -91,6 +93,15 @@ public class BookingController {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok(roomOpt.get());
+    }
+
+    @GetMapping("/images/{id}")
+    public ResponseEntity<Object> getImage(@PathVariable String id) {
+        Optional<ImageDTO> imageOpt = hotelService.getImageById(id);
+        if (imageOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(imageOpt.get());
     }
 
     //get all customers

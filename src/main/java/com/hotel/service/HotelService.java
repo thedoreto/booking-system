@@ -1,17 +1,11 @@
 package com.hotel.service;
 
-import com.hotel.dto.BookingDTO;
-import com.hotel.dto.CustomerDTO;
-import com.hotel.dto.RoomDTO;
-import com.hotel.model.Booking;
-import com.hotel.model.Customer;
-import com.hotel.model.Room;
+import com.hotel.dto.*;
+import com.hotel.model.*;
 import com.hotel.model.enums.BookingStatus;
 import com.hotel.model.enums.RoomType;
 import com.hotel.model.util.ValidationUtil;
-import com.hotel.repository.BookingMongoRepository;
-import com.hotel.repository.CustomerMongoRepository;
-import com.hotel.repository.RoomMongoRepository;
+import com.hotel.repository.*;
 import com.hotel.service.result.Result;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -27,15 +21,18 @@ public class HotelService {
     private RoomMongoRepository roomRepo;
     private CustomerMongoRepository customerRepo;
     private BookingMongoRepository bookingRepo;
+    private ImageMongoRepository imageRepo;
 
     private Map<String, List<Booking>> bookingsByRoomId  = new HashMap<>();
 
     public HotelService(RoomMongoRepository roomRepo,
                         CustomerMongoRepository customerRepo,
-                        BookingMongoRepository bookingRepo) {
+                        BookingMongoRepository bookingRepo,
+                        ImageMongoRepository imageRepo) {
         this.roomRepo = roomRepo;
         this.customerRepo = customerRepo;
         this.bookingRepo = bookingRepo;
+        this.imageRepo = imageRepo;
         rebuildIndex();
     }
 //String checkInString, String  checkOutString, String customerId, String roomId
@@ -140,14 +137,9 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
     }
 
     public List<BookingDTO> getAllBookings() {
-        System.out.println("start getAllBookings");
-        List<Booking> bookings = bookingRepo.findAll();
-        System.out.println("start stream");
-        Stream<Booking> stream = bookings.stream();
-        System.out.println("start map");
-         List<BookingDTO> dto=  stream.map(this::convertBookingToDTO)
+        return bookingRepo.findAll().stream()
+                .map(this::convertBookingToDTO)
                 .toList();
-        return dto;
     }
 
     public List<RoomDTO> getAllRooms() {
@@ -237,66 +229,14 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
         Optional<Customer> exists = customerRepo.findByEmail(customerDTO.getEmail());
 
         if (exists.isPresent()) {
-            System.out.println("Email already exists: " + customerDTO.getEmail());
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Email already exists"
-            );
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exists");
         }
 
-        System.out.println("Creating customer with email: " + customerDTO.getEmail() + " name: " + customerDTO.getName());
         Customer customer = new Customer(customerDTO.getName(), customerDTO.getEmail());
-        System.out.printf("saing");
         Customer saved = customerRepo.save(customer);
-        System.out.println("saved");
         return convertCustomerToDTO(saved);
     }
 
-    private CustomerDTO convertCustomerToDTO(Customer customer) {
-        System.out.println("convertCustomerToDTO: " + customer.getEmail() + " name: " + customer.getName());
-        return new CustomerDTO(customer.getId(), customer.getName(), customer.getEmail());
-    }
-
-      private BookingDTO convertBookingToDTO(Booking booking) {
-        System.out.println("start converting booking to DTO with id:[" + booking.getId() + "]");
-        System.out.println("room id in booking: [" + booking.getRoomId() + "]");
-        Optional<Room>  roomOpt = roomRepo.findById(booking.getRoomId());
-        if (roomOpt.isEmpty())  {
-            System.out.println("Room is empty");
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Room not found for booking");
-        }
-        Room room = roomOpt.get();
-        System.out.printf("room found for booking: %s", room.getId());
-        Optional<Customer> customerOpt = customerRepo.findById(booking.getCustomerId());
-        if (customerOpt.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Customer not found for booking");
-        }
-        Customer customer = customerOpt.get();
-        System.out.printf("customer found for booking: %s", customer.getId());
-        /*String id, String customerId, String customerName, String roomId, String roomNumber,
-                      String roomType, LocalDate checkInDate, LocalDate checkOutDate, long nights,
-                      double totalPrice, String status*/
-        return new BookingDTO(booking.getId(),
-                customer.getId(),
-                customer.getName(),
-                room.getId(),
-                String.valueOf(room.getRoomNumber()),
-                room.getType().toString(),
-                booking.getCheckInDate(),
-                booking.getCheckOutDate(),
-                booking.getNights(),
-                booking.getTotalPrice(),
-                booking.getStatus().name());
-    }
-
-    private RoomDTO convertRoomToDTO(Room room) {
-        System.out.println("Room number: " + room.getRoomNumber() + " images: " + room.getImageIds().size());
-        return new RoomDTO(room.getId(),
-                room.getRoomNumber(),
-                room.getType().toString(),
-                room.getPricePerNight(),
-                room.getImageIds());
-    }
 
     public void deleteRoom(String id) {
         Optional<Room> roomOpt = roomRepo.findById(id);
@@ -337,10 +277,7 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
 
         // не искам roomNumber да се променя
         if (roomDTO.getRoomNumber() != room.getRoomNumber()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Room number cannot be changed"
-            );
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room number cannot be changed");
         }
 
         room.setType(RoomType.valueOf(roomDTO.getType()));
@@ -372,5 +309,50 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
                 .stream()
                 .map(this::convertBookingToDTO)
                 .toList();
+    }
+
+    public Optional<ImageDTO> getImageById(String id) {
+        return imageRepo.findById(id).map(this::convertImageToDTO);
+    }
+
+    private ImageDTO convertImageToDTO(Image image) {
+        return new ImageDTO(image.getId(), image.getId(), image.getUrl());
+    }
+
+    private CustomerDTO convertCustomerToDTO(Customer customer) {
+        return new CustomerDTO(customer.getId(), customer.getName(), customer.getEmail());
+    }
+
+    private BookingDTO convertBookingToDTO(Booking booking) {
+        Optional<Room>  roomOpt = roomRepo.findById(booking.getRoomId());
+        if (roomOpt.isEmpty())  {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Room not found for booking");
+        }
+        Room room = roomOpt.get();
+        Optional<Customer> customerOpt = customerRepo.findById(booking.getCustomerId());
+        if (customerOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Customer not found for booking");
+        }
+        Customer customer = customerOpt.get();
+
+        return new BookingDTO(booking.getId(),
+                customer.getId(),
+                customer.getName(),
+                room.getId(),
+                String.valueOf(room.getRoomNumber()),
+                room.getType().toString(),
+                booking.getCheckInDate(),
+                booking.getCheckOutDate(),
+                booking.getNights(),
+                booking.getTotalPrice(),
+                booking.getStatus().name());
+    }
+
+    private RoomDTO convertRoomToDTO(Room room) {
+        return new RoomDTO(room.getId(),
+                room.getRoomNumber(),
+                room.getType().toString(),
+                room.getPricePerNight(),
+                room.getImageIds());
     }
 }
