@@ -316,7 +316,7 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
     }
 
     private ImageDTO convertImageToDTO(Image image) {
-        return new ImageDTO(image.getId(), image.getId(), image.getUrl());
+        return new ImageDTO(image.getId(), image.getUrl(), image.getTitle());
     }
 
     private CustomerDTO convertCustomerToDTO(Customer customer) {
