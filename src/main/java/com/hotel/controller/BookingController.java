@@ -57,7 +57,7 @@ public class BookingController {
         return ResponseEntity.ok(roomOpt.get());
     }
 
-    @GetMapping("/")
+    @GetMapping("/home")
     public String start() {
         return """
         <html>
@@ -94,7 +94,7 @@ public class BookingController {
     }
 
     //get all customers
-    @GetMapping("customers")
+    @GetMapping("/customers")
     public List<CustomerDTO>  getAllCustomers() {
         return hotelService.findAllCustomers();
     }
