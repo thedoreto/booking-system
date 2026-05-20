@@ -1,17 +1,22 @@
 package com.hotel.dto;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class RoomDTO {
 
     private String id;
     private int roomNumber;
     private String type;//SINGLE, DOUBLE, APARTMENT
     private double pricePerNight;
+    private List<String> images = new ArrayList<>();
 
-    public RoomDTO(String id, int roomNumber, String type, double pricePerNight) {
+    public RoomDTO(String id, int roomNumber, String type, double pricePerNight, List<String> images) {
         this.id = id;
         this.roomNumber = roomNumber;
         this.type = type;
         this.pricePerNight = pricePerNight;
+        this.images = images;
     }
 
     public String getId() {
@@ -45,4 +50,8 @@ public class RoomDTO {
     public void setPricePerNight(double pricePerNight) {
         this.pricePerNight = pricePerNight;
     }
+
+    public List<String> getImages() { return images; }
+
+    public void setImages(List<String> images) { this.images = images; }
 }

@@ -4,6 +4,9 @@ import com.hotel.model.enums.RoomType;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Document(collection = "rooms")
 public class Room {
 
@@ -13,15 +16,17 @@ public class Room {
     private int roomNumber;
     private RoomType type;  // SINGLE, DOUBLE, APARTMENT
     private double pricePerNight;
+    private List<String> images = new ArrayList<>();
 
     public Room() {
         // REQUIRED by Spring Data Mongo
     }
 
-    public Room(int roomNumber, RoomType type, double pricePerNight) {
+    public Room(int roomNumber, RoomType type, double pricePerNight, List<String> images) {
         this.roomNumber = roomNumber;
         this.type = type;
         this.pricePerNight = pricePerNight;
+        this.images = images;
     }
 
     public String getId() {
@@ -52,5 +57,13 @@ public class Room {
 
     public void setPricePerNight(double pricePerNight) {
         this.pricePerNight = pricePerNight;
+    }
+
+    public List<String> getImages() { return images; }
+
+    public void setImages(List<String> images) { this.images = images; }
+
+    public void addImage(String aImage) {
+        images.add(aImage);
     }
 }
