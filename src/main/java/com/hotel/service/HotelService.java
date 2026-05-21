@@ -283,7 +283,7 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
 
         room.setType(RoomType.valueOf(roomDTO.getType()));
         room.setPricePerNight(roomDTO.getPricePerNight());
-
+        room.setImageIds(roomDTO.getImageIds());
         Room updated = roomRepo.save(room);
         return Optional.of(convertRoomToDTO(updated));
     }
@@ -323,13 +323,9 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is required");
         }
        Image image = new Image();
-        System.out.println("new image");
         image.setTitle(imageDTO.getTitle());
-        System.out.println("with title:  " + image.getTitle());
         image.setUrl(imageDTO.getUrl());
-        System.out.println("with url: " + image.getUrl());
         Image saved = imageRepo.save(image);
-        System.out.println("Saved with id: " + saved.getId());
         return convertImageToDTO(saved);
     }
 
