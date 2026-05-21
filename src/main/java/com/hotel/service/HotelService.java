@@ -322,11 +322,28 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
         if (imageDTO == null || imageDTO.getUrl() == null || imageDTO.getUrl().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is required");
         }
-       Image image = new Image();
+        Image image = new Image();
         image.setTitle(imageDTO.getTitle());
         image.setUrl(imageDTO.getUrl());
         Image saved = imageRepo.save(image);
         return convertImageToDTO(saved);
+    }
+
+    public void deleteImage(String id) {
+        Optional<Image> imageOpt = imageRepo.findById(id);
+        if (imageOpt.isEmpty())  {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Image not found");
+        }
+
+        List<Room> rooms = roomRepo.findByimageIds(id);
+        if (rooms != null && !rooms.isEmpty()) {
+            for (Room room: rooms) {
+                room.getImageIds().remove(id);
+                roomRepo.save(room);
+            }
+        }
+
+        imageRepo.delete(imageOpt.get());
     }
 
     public Optional<ImageDTO> getImageById(String id) {

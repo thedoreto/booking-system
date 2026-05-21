@@ -109,9 +109,15 @@ public class BookingController {
         return ResponseEntity.ok(hotelService.getAllImages());
     }
 
- @PostMapping("/images/upload")
-    public ImageDTO upload(@RequestBody ImageDTO image) {
+    @PostMapping("/images/upload")
+    public ImageDTO uploadImage(@RequestBody ImageDTO image) {
         return hotelService.uploadImage(image);
+    }
+
+    @DeleteMapping("/images/{id}")
+    public ResponseEntity<Void> deleteImage(@PathVariable String id) {
+        hotelService.deleteImage(id);
+        return ResponseEntity.noContent().build();
     }
 
     //get all customers

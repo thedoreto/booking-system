@@ -13,5 +13,7 @@ public interface RoomMongoRepository
         extends MongoRepository<Room, String> {
 
     List<Room> findByRoomNumber(int roomNumber);
-  //  List<Booking> findByCheckInDateAndCheckOutDate(LocalDate checkInDate, LocalDate checkOutDate);
+
+    List<Room> findByimageIds(String id);
+    //  List<Booking> findByCheckInDateAndCheckOutDate(LocalDate checkInDate, LocalDate checkOutDate);
 }
