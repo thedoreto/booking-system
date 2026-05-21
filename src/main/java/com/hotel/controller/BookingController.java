@@ -78,6 +78,20 @@ public class BookingController {
         return ResponseEntity.ok(roomOpt.get());
     }
 
+    @PostMapping("/rooms/{id}/images/add")
+    public ResponseEntity<RoomDTO> addImagesToRoom(@PathVariable String id, @RequestBody List<String> imageIds) {
+        Optional<RoomDTO> roomOpt = hotelService.addImagesToRoom(id, imageIds);
+        if (roomOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(roomOpt.get());
+    }
+
+    @DeleteMapping("/rooms/{id}/images/{imageId}")
+    public ResponseEntity deleteImageFromRoom(@PathVariable("id")  String roomId, @PathVariable String imageId) {
+        hotelService.deleteImageFromRoom(roomId, imageId);
+        return ResponseEntity.noContent().build();
+    }
     //delete a room, if exists
     @DeleteMapping("/rooms/{id}")
     public ResponseEntity<Void> deleteRoom(@PathVariable String id) {

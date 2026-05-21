@@ -283,11 +283,35 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
 
         room.setType(RoomType.valueOf(roomDTO.getType()));
         room.setPricePerNight(roomDTO.getPricePerNight());
+      // not changing image Ids
         room.setImageIds(roomDTO.getImageIds());
         Room updated = roomRepo.save(room);
         return Optional.of(convertRoomToDTO(updated));
     }
 
+    public Optional<RoomDTO> addImagesToRoom(String id, List<String> imageIds) {
+        Optional<Room> roomOpt = roomRepo.findById(id);
+        if (roomOpt.isEmpty()) {
+            return Optional.empty();
+        }
+        Room room = roomOpt.get();
+        room.getImageIds().addAll(imageIds);
+        Room updated = roomRepo.save(room);
+        return Optional.of(convertRoomToDTO(updated));
+    }
+
+    public void deleteImageFromRoom(String roomId, String imageId) {
+        Optional<Room> roomOpt = roomRepo.findById(roomId);
+        if (roomOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found");
+        }
+        Room room = roomOpt.get();
+        if (!room.getImageIds().contains(imageId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Image not found in this room");
+        }
+        room.getImageIds().remove(imageId);
+        roomRepo.save(room);
+    }
 
     public List<BookingDTO> getActiveBookings() {
         return bookingRepo.findByCheckInDateGreaterThanEqualAndStatus(
