@@ -9,6 +9,7 @@ import com.hotel.repository.*;
 import com.hotel.service.result.Result;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -309,6 +310,23 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
                 .stream()
                 .map(this::convertBookingToDTO)
                 .toList();
+    }
+
+    public List<ImageDTO> getAllImages() {
+        return imageRepo.findAll().stream()
+                .map(this::convertImageToDTO)
+                .toList();
+    }
+
+    public ImageDTO uploadImage(ImageDTO imageDTO) {
+        if (imageDTO == null || imageDTO.getUrl() == null || imageDTO.getUrl().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is required");
+        }
+       Image image = new Image();
+        image.setTitle(imageDTO.getTitle());
+        image.setUrl(imageDTO.getUrl());
+        Image saved = imageRepo.save(image);
+        return convertImageToDTO(saved);
     }
 
     public Optional<ImageDTO> getImageById(String id) {

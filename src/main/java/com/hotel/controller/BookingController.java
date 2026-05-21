@@ -104,6 +104,16 @@ public class BookingController {
         return ResponseEntity.ok(imageOpt.get());
     }
 
+    @GetMapping("/images")
+    public ResponseEntity<List<ImageDTO> >getAllImages() {
+        return ResponseEntity.ok(hotelService.getAllImages());
+    }
+
+ @PostMapping("/images/upload")
+    public ImageDTO upload(@RequestBody ImageDTO image) {
+        return hotelService.uploadImage(image);
+    }
+
     //get all customers
     @GetMapping("/customers")
     public List<CustomerDTO>  getAllCustomers() {
