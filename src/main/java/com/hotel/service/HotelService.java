@@ -323,9 +323,13 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is required");
         }
        Image image = new Image();
+        System.out.println("new image");
         image.setTitle(imageDTO.getTitle());
+        System.out.println("with title:  " + image.getTitle());
         image.setUrl(imageDTO.getUrl());
+        System.out.println("with url: " + image.getUrl());
         Image saved = imageRepo.save(image);
+        System.out.println("Saved with id: " + saved.getId());
         return convertImageToDTO(saved);
     }
 
