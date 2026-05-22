@@ -1,10 +1,10 @@
 package com.hotel.controller;
 
 import com.hotel.dto.BookingDTO;
-import com.hotel.dto.CustomerDTO;
+import com.hotel.dto.UserDTO;
 import com.hotel.dto.ImageDTO;
 import com.hotel.dto.RoomDTO;
-import com.hotel.model.Customer;
+import com.hotel.model.User;
 import com.hotel.model.Room;
 import com.hotel.service.HotelService;
 import com.hotel.service.result.Result;
@@ -134,41 +134,41 @@ public class BookingController {
         return ResponseEntity.noContent().build();
     }
 
-    //get all customers
-    @GetMapping("/customers")
-    public List<CustomerDTO>  getAllCustomers() {
-        return hotelService.findAllCustomers();
+    //get all users
+    @GetMapping("/users")
+    public List<UserDTO>  getAllUsers() {
+        return hotelService.findAllUsers();
     }
 
-    //get customer by id
-    @GetMapping("customers/{id}")
-    public Optional<CustomerDTO> getCustomer(@PathVariable String id) {
-        return  hotelService.getCustomerById(id);
+    //get user by id
+    @GetMapping("users/{id}")
+    public Optional<UserDTO> getUser(@PathVariable String id) {
+        return  hotelService.getUserById(id);
     }
 
-    //update existig customer
-    @PutMapping("/customers/{id}")
-    public ResponseEntity<CustomerDTO> updateCustomer(@PathVariable String id, @RequestBody CustomerDTO customerDTO) {
-        Optional<CustomerDTO> customerOpt = hotelService.updateCustomer(id, customerDTO);
+    //update existig user
+    @PutMapping("/users/{id}")
+    public ResponseEntity<UserDTO> updateUser(@PathVariable String id, @RequestBody UserDTO userDTO) {
+        Optional<UserDTO> userOpt = hotelService.updateUser(id, userDTO);
 
-        return ResponseEntity.ok(customerOpt.get());
+        return ResponseEntity.ok(userOpt.get());
     }
 
-    //delete a customer, if exists
-    @DeleteMapping("/customers/{id}")
-    public ResponseEntity<Void> deleteCustomer(@PathVariable String id) {
-        hotelService.deleteCustomer(id);
+    //delete a user, if exists
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
+        hotelService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
 
-    //create new customer
-    @PostMapping("/customers")
-    public ResponseEntity<CustomerDTO> createCustomer(@RequestBody CustomerDTO customerDTO) {
-        CustomerDTO customer = hotelService.newCustomer(customerDTO);
-        return ResponseEntity.ok(customer);
+    //create new user
+    @PostMapping("/users")
+    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
+        UserDTO user = hotelService.newUser(userDTO);
+        return ResponseEntity.ok(user);
     }
 /*{
-  "customerId": "...",
+  "userId": "...",
   "roomId": "...",
   "checkInDate": "2026-05-20",
   "checkOutDate": "2026-05-25"
@@ -195,10 +195,10 @@ public class BookingController {
 
     }
     @GetMapping("/booking")
-    public Object getBookingByCustomer(@RequestParam String name, @RequestParam String email) {
-       // Customer customer = new Customer(name, email);
-      //  return hotelService.getBookingsByCustomer(customer);
-        return "get all bookings for a customer";
+    public Object getBookingByUser(@RequestParam String name, @RequestParam String email) {
+       // User user = new User(name, email);
+      //  return hotelService.getBookingsByUser(user);
+        return "get all bookings for a user";
     }
 
     @GetMapping("/bookings")
@@ -225,7 +225,7 @@ public class BookingController {
     public static class CreateBookingRequest {
         public LocalDate checkInDate;
         public LocalDate checkOutDate;
-        public Customer customer;
+        public UserDTO user;
         public Room room;
     }
 }

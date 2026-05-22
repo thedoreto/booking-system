@@ -13,17 +13,17 @@ import java.util.List;
 public interface BookingMongoRepository
         extends MongoRepository<Booking, String> {
 
-    List<Booking> findByCustomerIdAndStatus(
-            String customerId,
+    List<Booking> findByUserIdAndStatus(
+            String userId,
             String status
     );
 
-    List<Booking> findByCustomerIdAndCheckInDateGreaterThanEqualAndStatus(String id, LocalDate date, BookingStatus status);
-    List<Booking> findByroomIdAndCheckInDateGreaterThanEqualAndStatus(String roomId, LocalDate date, BookingStatus status);
+    List<Booking> findByUserIdAndCheckInDateGreaterThanEqualAndStatus(String id, LocalDate date, BookingStatus status);
+    List<Booking> findByRoomIdAndCheckInDateGreaterThanEqualAndStatus(String roomId, LocalDate date, BookingStatus status);
 
     List<Booking> findByRoomIdAndStatus(String roomId, BookingStatus bookingStatus);
 
-    List<Booking>  findByCustomerIdAndRoomId(String customerId, String roomId);
+    List<Booking>  findByUserIdAndRoomId(String userId, String roomId);
 
     List<Booking> findByCheckInDateGreaterThanEqualAndStatus(LocalDate now, BookingStatus bookingStatus);
 
@@ -31,7 +31,7 @@ public interface BookingMongoRepository
 
     List<Booking> findByCheckInDateLessThan(LocalDate now);
 
-    List<Booking> findByCustomerId(String id);
+    List<Booking> findByUserId(String id);
 
     List<Booking> findByroomId(String id);
 }

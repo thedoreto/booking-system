@@ -14,7 +14,7 @@ public class Booking {
     @Id
     private String id;
 
-    private String customerId;
+    private String userId;
     private String roomId;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate checkInDate;
@@ -28,8 +28,8 @@ public class Booking {
         // REQUIRED by Spring Data Mongo
     }
 
-    public Booking(String customerId, Room room, String checkInDate, String checkOutDate) {
-        this.customerId = customerId;
+    public Booking(String userId, Room room, String checkInDate, String checkOutDate) {
+        this.userId = userId;
         this.roomId = room.getId();
         this.checkInDate = LocalDate.parse(checkInDate);
         this.checkOutDate = LocalDate.parse(checkOutDate);
@@ -43,7 +43,7 @@ public class Booking {
     }
 
     public String getId() { return id; }
-    public String getCustomerId() { return customerId; }
+    public String getUserId() { return userId; }
     public String getRoomId() { return roomId; }
     public LocalDate getCheckInDate() { return checkInDate; }
     public LocalDate getCheckOutDate() { return checkOutDate; }

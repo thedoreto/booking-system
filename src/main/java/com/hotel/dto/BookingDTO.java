@@ -4,8 +4,8 @@ import java.time.LocalDate;
 
 public class BookingDTO {
     private String id;
-    private String customerId;
-    private String customerName;
+    private String userId;
+    private String userName;
     private String roomId;
     private String roomNumber;
     private String roomType;
@@ -15,12 +15,12 @@ public class BookingDTO {
     private double totalPrice;
     private String status;//CONFIRMED, CANCELED
 
-    public BookingDTO(String id, String customerId, String customerName, String roomId, String roomNumber,
+    public BookingDTO(String id, String userId, String userName, String roomId, String roomNumber,
                       String roomType, LocalDate checkInDate, LocalDate checkOutDate, long nights,
                       double totalPrice, String status) {
         this.id = id;
-        this.customerId = customerId;
-        this.customerName = customerName;
+        this.userId = userId;
+        this.userName = userName;
         this.roomId = roomId;
         this.roomNumber = roomNumber;
         this.roomType = roomType;
@@ -36,80 +36,51 @@ public class BookingDTO {
     public String getId() {
         return id;
     }
-
     public void setId(String id) {
         this.id = id;
     }
-
-    public String getCustomerId() {
-        return customerId;
-    }
-
-    public void setCustomerId(String customerId) {
-        this.customerId = customerId;
-    }
-
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
     public String getRoomId() {
         return roomId;
     }
-
     public void setRoomId(String roomId) {
         this.roomId = roomId;
     }
-
     public LocalDate getCheckInDate() {
         return checkInDate;
     }
-
     public void setCheckInDate(LocalDate checkInDate) {
         this.checkInDate = checkInDate;
     }
-
-    public LocalDate getCheckOuDate() {
-        return checkOutDate;
-    }
-
+    public LocalDate getCheckOuDate() { return checkOutDate;  }
     public void setCheckOuDate(LocalDate checkOuDate) {
         this.checkOutDate = checkOuDate;
     }
-
     public long getNights() {
         return nights;
     }
-
     public void setNights(long nights) {
         this.nights = nights;
     }
-
     public double getTotalPrice() {
         return totalPrice;
     }
-
     public void setTotalPrice(double totalPrice) {
         this.totalPrice = totalPrice;
     }
-
     public String getStatus() {
         return status;
     }
-
     public void setStatus(String status) {
         this.status = status;
     }
-
-    public String getCustomerName() { return customerName;}
-
-    public void setCustomerName(String customerName) { this.customerName = customerName; }
-
+    public String getUserName() { return userName;}
+    public void setUserName(String userName) { this.userName = userName; }
     public String getRoomNumber() { return roomNumber;  }
-
     public void setRoomNumber(String roomNumber) { this.roomNumber = roomNumber; }
-
     public String getRoomType() { return roomType; }
-
     public void setRoomType(String roomType) { this.roomType = roomType; }
-
     public LocalDate getCheckOutDate() { return checkOutDate; }
-
     public void setCheckOutDate(LocalDate checkOutDate) { this.checkOutDate = checkOutDate; }
 }

@@ -1,23 +1,26 @@
 package com.hotel.model;
 
+import com.hotel.model.enums.UserRole;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Objects;
 
-@Document(collection = "customers")
-public class Customer {
+@Document(collection = "users")
+public class User {
 
     @Id
     private String id;
 
     private String name;
     private String email;
+    private String password;
+    private String role; // "USER" / "ADMIN"
 
-    public Customer() {
+    public User() {
     }
 
-    public Customer(String name, String email) {
+    public User(String name, String email, String password) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Name cannot be empty");
         }
@@ -25,17 +28,22 @@ public class Customer {
                 !email.contains("@") || !email.contains(".")) {
             throw new IllegalArgumentException("Not valid email");
         }
+        if (password == null || password.isBlank() || password.length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters");
+        }
 
+        this.password = password;
         this.name = name;
         this.email = email;
+        this.role = "USER";
     }
 
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Customer)) return false;
-        Customer other = (Customer) o;
+        if (!(o instanceof User)) return false;
+        User other = (User) o;
         return Objects.equals(this.id, other.id);
     }
     @Override
@@ -47,4 +55,8 @@ public class Customer {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public void setName(String name) { this.name = name; }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 }

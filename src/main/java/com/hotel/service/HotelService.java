@@ -9,45 +9,43 @@ import com.hotel.repository.*;
 import com.hotel.service.result.Result;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Stream;
 
 @Service
 public class HotelService {
 
     private RoomMongoRepository roomRepo;
-    private CustomerMongoRepository customerRepo;
+    private UserMongoRepository userRepo;
     private BookingMongoRepository bookingRepo;
     private ImageMongoRepository imageRepo;
 
     private Map<String, List<Booking>> bookingsByRoomId  = new HashMap<>();
 
     public HotelService(RoomMongoRepository roomRepo,
-                        CustomerMongoRepository customerRepo,
+                        UserMongoRepository userRepo,
                         BookingMongoRepository bookingRepo,
                         ImageMongoRepository imageRepo) {
         this.roomRepo = roomRepo;
-        this.customerRepo = customerRepo;
+        this.userRepo = userRepo;
         this.bookingRepo = bookingRepo;
         this.imageRepo = imageRepo;
         rebuildIndex();
     }
-//String checkInString, String  checkOutString, String customerId, String roomId
+//String checkInString, String  checkOutString, String userId, String roomId
 public BookingDTO createBooking(BookingDTO bookingDTO) {
 
     if (bookingDTO == null) {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid booking");
     }
 
-    String customerId = bookingDTO.getCustomerId();
+    String userId = bookingDTO.getUserId();
     String roomId = bookingDTO.getRoomId();
 
-    if (customerId == null || roomId == null ||
-            customerId.isBlank() || roomId.isBlank()) {
+    if (userId == null || roomId == null ||
+            userId.isBlank() || roomId.isBlank()) {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input");
     }
 
@@ -62,13 +60,13 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room not available");
     }
 
-    Customer customer = customerRepo.findById(customerId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer not found"));
+    User user = userRepo.findById(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found"));
 
     Room room = roomRepo.findById(roomId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room not found"));
 
-    Booking booking = new Booking(customerId, room, checkInDate.toString(), checkOutDate.toString());
+    Booking booking = new Booking(userId, room, checkInDate.toString(), checkOutDate.toString());
 
     return convertBookingToDTO(bookingRepo.save(booking));
 }
@@ -86,10 +84,10 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
         return convertBookingToDTO(booking);
     }
 
-    public List<BookingDTO> getBookingByCustomerIdAndRoomId(String customerId, String roomId) {
-        List<Booking> bookings = bookingRepo.findByCustomerIdAndRoomId(customerId, roomId);
+    public List<BookingDTO> getBookingByUserIdAndRoomId(String userId, String roomId) {
+        List<Booking> bookings = bookingRepo.findByUserIdAndRoomId(userId, roomId);
         if (bookings == null && bookings.isEmpty())    {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No bookings found for customer and room");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No bookings found for user and room");
         }
         return bookings.stream()
                 .map(this::convertBookingToDTO)
@@ -170,56 +168,56 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
 
         return Result.success(rooms);
     }
-    public List<CustomerDTO> findAllCustomers() {
-        return customerRepo.findAll().stream()
-                .map(this::convertCustomerToDTO)
+    public List<UserDTO> findAllUsers() {
+        return userRepo.findAll().stream()
+                .map(this::convertUserToDTO)
                 .toList();
     }
 
-    public Optional<CustomerDTO> getCustomerById(String id) {
-        Optional<Customer> customerOpt = customerRepo.findById(id);
-        if (customerOpt.isEmpty()) {
+    public Optional<UserDTO> getUserById(String id) {
+        Optional<User> userOpt = userRepo.findById(id);
+        if (userOpt.isEmpty()) {
             return Optional.empty();
         }
 
-        return Optional.of(convertCustomerToDTO(customerOpt.get()));
+        return Optional.of(convertUserToDTO(userOpt.get()));
     }
 
-    public Optional<CustomerDTO> updateCustomer(String id, CustomerDTO customerDTO){
-        Customer customer = customerRepo.findById(id)
+    public Optional<UserDTO> updateUser(String id, UserDTO userDTO){
+        User user = userRepo.findById(id)
                 .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found")
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
                 );
 
         // НЕ искам email да се променя
-        if (!customerDTO.getEmail().equals(customer.getEmail())) {
+        if (!userDTO.getEmail().equals(user.getEmail())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email cannot be changed");
         }
 
-        customer.setName(customerDTO.getName());
-
-        Customer updated = customerRepo.save(customer);
-        return Optional.of(convertCustomerToDTO(updated));
+        user.setName(userDTO.getName());
+        user.setPassword(userDTO.getPassword());
+        User updated = userRepo.save(user);
+        return Optional.of(convertUserToDTO(updated));
 
     }
 
-    public void deleteCustomer(String id) {
-        Optional<Customer> customerOpt = customerRepo.findById(id);
-        if (customerOpt.isEmpty())  {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found");
+    public void deleteUser(String id) {
+        Optional<User> userOpt = userRepo.findById(id);
+        if (userOpt.isEmpty())  {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
-        List<Booking> bookings = bookingRepo.findByCustomerId(id);
+        List<Booking> bookings = bookingRepo.findByUserId(id);
         if (bookings != null && !bookings.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete this customer - has active bookings");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete this user - has active bookings");
         }
-        customerRepo.delete(customerOpt.get());
+        userRepo.delete(userOpt.get());
     }
 
-    public CustomerDTO newCustomer(CustomerDTO customerDTO) {
+    public UserDTO newUser(UserDTO userDTO) {
 
-        if (customerDTO == null
-                || customerDTO.getName() == null || customerDTO.getName().isBlank()
-                || customerDTO.getEmail() == null || customerDTO.getEmail().isBlank()) {
+        if (userDTO == null
+                || userDTO.getName() == null || userDTO.getName().isBlank()
+                || userDTO.getEmail() == null || userDTO.getEmail().isBlank()) {
 
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -227,15 +225,15 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
             );
         }
 
-        Optional<Customer> exists = customerRepo.findByEmail(customerDTO.getEmail());
+        Optional<User> exists = userRepo.findByEmail(userDTO.getEmail());
 
         if (exists.isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exists");
         }
 
-        Customer customer = new Customer(customerDTO.getName(), customerDTO.getEmail());
-        Customer saved = customerRepo.save(customer);
-        return convertCustomerToDTO(saved);
+        User user = new User(userDTO.getName(), userDTO.getEmail(), userDTO.getPassword());
+        User saved = userRepo.save(user);
+        return convertUserToDTO(saved);
     }
 
 
@@ -378,8 +376,8 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
         return new ImageDTO(image.getId(), image.getUrl(), image.getTitle());
     }
 
-    private CustomerDTO convertCustomerToDTO(Customer customer) {
-        return new CustomerDTO(customer.getId(), customer.getName(), customer.getEmail());
+    private UserDTO convertUserToDTO(User user) {
+        return new UserDTO(user.getId(), user.getName(), user.getEmail(), user.getPassword(), user.getRole());
     }
 
     private BookingDTO convertBookingToDTO(Booking booking) {
@@ -388,15 +386,15 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Room not found for booking");
         }
         Room room = roomOpt.get();
-        Optional<Customer> customerOpt = customerRepo.findById(booking.getCustomerId());
-        if (customerOpt.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Customer not found for booking");
+        Optional<User> userOpt = userRepo.findById(booking.getUserId());
+        if (userOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "User not found for booking");
         }
-        Customer customer = customerOpt.get();
+        User user = userOpt.get();
 
         return new BookingDTO(booking.getId(),
-                customer.getId(),
-                customer.getName(),
+                user.getId(),
+                user.getName(),
                 room.getId(),
                 String.valueOf(room.getRoomNumber()),
                 room.getType().toString(),
