@@ -1,5 +1,6 @@
 package com.hotel.security;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,8 +37,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String token = header.substring(7);
 
-        String userId = jwtService.extractUserId(token);
-        String email = jwtService.extractEmail(token);
+        Claims claims = jwtService.extractClaims(token);
+        String userId = claims.get("userId", String.class);
+        String email = claims.getSubject();
 
         UserPrincipal principal = new UserPrincipal(
                 userId,
