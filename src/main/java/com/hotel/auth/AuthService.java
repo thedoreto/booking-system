@@ -36,7 +36,7 @@ public class AuthService {
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword())); //  ВАЖНО
-
+        user.setRole("USER");
         userRepository.save(user);
 
         String token = jwtService.generateToken(user.getId(), user.getEmail());
