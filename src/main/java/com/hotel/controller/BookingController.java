@@ -6,10 +6,12 @@ import com.hotel.dto.ImageDTO;
 import com.hotel.dto.RoomDTO;
 import com.hotel.model.User;
 import com.hotel.model.Room;
+import com.hotel.security.UserPrincipal;
 import com.hotel.service.HotelService;
 import com.hotel.service.result.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
@@ -24,6 +26,13 @@ public class BookingController {
 
     public BookingController(HotelService hotelService) {
         this.hotelService = hotelService;
+    }
+
+    @GetMapping("/me")
+    public String me(
+            @AuthenticationPrincipal UserPrincipal user
+    ) {
+        return user.getId();
     }
 
     @GetMapping
