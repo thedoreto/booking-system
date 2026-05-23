@@ -31,4 +31,15 @@ public class AuthService {
 
         return new AuthResponse(token);
     }
+
+    public AuthResponse register(RegisterRequest request) {
+        User user = new User();
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword())); //  ВАЖНО
+
+        userRepository.save(user);
+
+        String token = jwtService.generateToken(user.getId(), user.getEmail());
+        return new AuthResponse(token);
+    }
 }
