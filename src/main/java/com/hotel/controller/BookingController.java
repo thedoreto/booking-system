@@ -11,10 +11,12 @@ import com.hotel.service.HotelService;
 import com.hotel.service.result.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @CrossOrigin(origins = "*")
@@ -29,10 +31,17 @@ public class BookingController {
     }
 
     @GetMapping("/me")
-    public String me(
-            @AuthenticationPrincipal UserPrincipal user
-    ) {
-        return user.getId();
+    public Map<String, Object> me(Authentication authentication) {
+
+        UserPrincipal principal =
+                (UserPrincipal) authentication.getPrincipal();
+        User user = hotelService.findUserById(principal.getId());
+
+        return Map.of(
+                "id", user.getId(),
+                "email", user.getEmail(),
+                "role", user.getRole()
+        );
     }
 
     @GetMapping

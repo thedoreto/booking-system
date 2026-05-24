@@ -174,6 +174,14 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
                 .toList();
     }
 
+    public User findUserById(String id) {
+        Optional<User> userOpt = userRepo.findById(id);
+        if (userOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+        return userOpt.get();
+    }
+
     public Optional<UserDTO> getUserById(String id) {
         Optional<User> userOpt = userRepo.findById(id);
         if (userOpt.isEmpty()) {
@@ -412,4 +420,6 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
                 room.getPricePerNight(),
                 room.getImageIds());
     }
+
+
 }
