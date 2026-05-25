@@ -213,6 +213,7 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
         }
 
         user.setName(userDTO.getName());
+        user.setRole(userDTO.getRole());
         //user.setPassword(userDTO.getPassword());
         User updated = userRepo.save(user);
         return Optional.of(convertUserToDTO(updated));
