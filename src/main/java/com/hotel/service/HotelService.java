@@ -148,11 +148,13 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
     }
 
     public Optional<RoomDTO> getRoomById(String id) {
+        System.out.println("Start get room by id: " + id);
         Optional<Room> roomOpt = roomRepo.findById(id);
         if (roomOpt.isEmpty()) {
+            System.out.println("Room not found with id: " + id);
             return Optional.empty();
         }
-
+        System.out.println("Room found: " + roomOpt.get().getRoomNumber());
         return Optional.of(convertRoomToDTO(roomOpt.get()));
     }
 

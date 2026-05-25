@@ -32,8 +32,9 @@ public class BookingController {
 
     @GetMapping("/me")
     public Map<String, Object> me(Authentication authentication) {
+        System.out.println("Start /me endpoint");
         String email = authentication.getName();
-
+        System.out.println("User email: " + email);
         User user = hotelService.findUserByEmail(email);
 
 
@@ -75,16 +76,20 @@ public class BookingController {
     //get all rooms
     @GetMapping("/rooms")
     public ResponseEntity<List<RoomDTO>> getAll() {
+        System.out.println("Start get rooms");
         return ResponseEntity.ok(hotelService.getAllRooms());
     }
 
     //get room by id
     @GetMapping("/rooms/{id}")
     public ResponseEntity<RoomDTO> getRoom(@PathVariable String id) {
+        System.out.println("Start get room by id: " + id);
         Optional<RoomDTO> roomOpt = hotelService.getRoomById(id);
         if (roomOpt.isEmpty()) {
+            System.out.println("Room not found with id: " + id);System.out.println();
             return ResponseEntity.notFound().build();
         }
+        System.out.println("Room found: " + roomOpt.get().getRoomNumber());
         return ResponseEntity.ok(roomOpt.get());
     }
 
