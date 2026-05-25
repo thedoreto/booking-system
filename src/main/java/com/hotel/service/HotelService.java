@@ -174,8 +174,8 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
                 .toList();
     }
 
-    public User findUserById(String id) {
-        Optional<User> userOpt = userRepo.findById(id);
+    public User findUserByEmail(String email) {
+        Optional<User> userOpt = userRepo.findByEmail(email);
         if (userOpt.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }

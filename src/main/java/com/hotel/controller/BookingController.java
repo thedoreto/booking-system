@@ -32,10 +32,10 @@ public class BookingController {
 
     @GetMapping("/me")
     public Map<String, Object> me(Authentication authentication) {
+        String email = authentication.getName();
 
-        UserPrincipal principal =
-                (UserPrincipal) authentication.getPrincipal();
-        User user = hotelService.findUserById(principal.getId());
+        User user = hotelService.findUserByEmail(email);
+
 
         return Map.of(
                 "id", user.getId(),
