@@ -370,10 +370,9 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
                     .toList();
         }
 
-        return bookingRepo.findByUserIdAndCheckInDateGreaterThanEqualAndStatus(
+        return bookingRepo.findByUserIdCheckInDateGreaterThanEqual(
                         user.getId(),
-                        LocalDate.now(),
-                        BookingStatus.CONFIRMED)
+                        LocalDate.now())
                 .stream()
                 .map(this::convertBookingToDTO)
                 .toList();
