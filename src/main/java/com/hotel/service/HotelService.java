@@ -145,6 +145,7 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
                     .map(this::convertBookingToDTO)
                     .toList();
         }
+        System.out.println("User id: " + user.getId());
         return bookingRepo.findByUserId(user.getId()).stream()
                 .map(this::convertBookingToDTO)
                 .toList();
@@ -157,13 +158,10 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
     }
 
     public Optional<RoomDTO> getRoomById(String id) {
-        System.out.println("Start get room by id: " + id);
         Optional<Room> roomOpt = roomRepo.findById(id);
         if (roomOpt.isEmpty()) {
-            System.out.println("Room not found with id: " + id);
             return Optional.empty();
         }
-        System.out.println("Room found: " + roomOpt.get().getRoomNumber());
         return Optional.of(convertRoomToDTO(roomOpt.get()));
     }
 
