@@ -330,8 +330,10 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
 
     public List<BookingDTO> getActiveBookings(Authentication auth) {
         UserPrincipal user = (UserPrincipal) auth.getPrincipal();
+        System.out.println("User email: " + user.getEmail());
 
         if (user.getAuthorities().contains("ROLE_ADMIN")) {
+            System.out.printf("");
             return bookingRepo.findByCheckInDateGreaterThanEqualAndStatus(
                             LocalDate.now(),
                             BookingStatus.CONFIRMED
@@ -339,7 +341,7 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
                     .map(this::convertBookingToDTO)
                     .toList();
         }
-        System.out.println("User id: " + user.getId());
+
         return bookingRepo.findByUserIdAndCheckInDateGreaterThanEqualAndStatus(
                         user.getId(),
                         LocalDate.now(),
@@ -351,14 +353,16 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
 
     public List<BookingDTO> getFutureBookings(Authentication auth) {
         UserPrincipal user = (UserPrincipal) auth.getPrincipal();
+        System.out.println("User email: " + user.getEmail());
 
         if (user.getAuthorities().contains("ROLE_ADMIN")) {
+            System.out.println("Admin user, fetching all future bookings");
             return bookingRepo.findByCheckInDateGreaterThanEqual(LocalDate.now())
                     .stream()
                     .map(this::convertBookingToDTO)
                     .toList();
         }
-        System.out.println("User id: " + user.getId());
+
         return bookingRepo.findByUserIdAndCheckInDateGreaterThanEqualAndStatus(
                         user.getId(),
                         LocalDate.now(),
@@ -370,14 +374,15 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
 
     public List<BookingDTO> getHistoryBookings(Authentication auth) {
         UserPrincipal user = (UserPrincipal) auth.getPrincipal();
-
+        System.out.println("User email: " + user.getEmail());
         if (user.getAuthorities().contains("ROLE_ADMIN")) {
+            System.out.println("Admin user, fetching all history bookings");
             return bookingRepo.findByCheckInDateLessThan(LocalDate.now())
                     .stream()
                     .map(this::convertBookingToDTO)
                     .toList();
         }
-        System.out.println("User id: " + user.getId());
+
         return bookingRepo.findByUserIdAndCheckInDateLessThan(
                         user.getId(),
                         LocalDate.now())

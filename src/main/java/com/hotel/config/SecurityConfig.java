@@ -41,7 +41,15 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/", "/home", "/error").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // 🔥 PUBLIC endpoints (трябва да са тук)
+                        .requestMatchers("/rooms/**").authenticated()
+                        .requestMatchers("/images/**").authenticated()
+                        .requestMatchers("/bookings/**").authenticated()
+                        .requestMatchers("/users/**").authenticated()
+
                         .anyRequest().authenticated()
                 )
 
