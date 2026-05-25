@@ -6,8 +6,10 @@ import com.hotel.model.enums.BookingStatus;
 import com.hotel.model.enums.RoomType;
 import com.hotel.model.util.ValidationUtil;
 import com.hotel.repository.*;
+import com.hotel.security.UserPrincipal;
 import com.hotel.service.result.Result;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -135,8 +137,15 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
                 && !date.isAfter(b.getCheckOutDate());
     }
 
-    public List<BookingDTO> getAllBookings() {
-        return bookingRepo.findAll().stream()
+    public List<BookingDTO> getAllBookings(Authentication auth) {
+        UserPrincipal user = (UserPrincipal) auth.getPrincipal();
+
+        if (user.getAuthorities().contains("ROLE_ADMIN")) {
+            return bookingRepo.findAll().stream()
+                    .map(this::convertBookingToDTO)
+                    .toList();
+        }
+        return bookingRepo.findByUserId(user.getId()).stream()
                 .map(this::convertBookingToDTO)
                 .toList();
     }

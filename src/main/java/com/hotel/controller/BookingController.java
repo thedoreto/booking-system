@@ -32,9 +32,7 @@ public class BookingController {
 
     @GetMapping("/me")
     public Map<String, Object> me(Authentication authentication) {
-        System.out.println("Start /me endpoint");
         String email = authentication.getName();
-        System.out.println("User email: " + email);
         User user = hotelService.findUserByEmail(email);
 
 
@@ -76,20 +74,16 @@ public class BookingController {
     //get all rooms
     @GetMapping("/rooms")
     public ResponseEntity<List<RoomDTO>> getAll() {
-        System.out.println("Start get rooms");
         return ResponseEntity.ok(hotelService.getAllRooms());
     }
 
     //get room by id
     @GetMapping("/rooms/{id}")
     public ResponseEntity<RoomDTO> getRoom(@PathVariable String id) {
-        System.out.println("Start get room by id: " + id);
         Optional<RoomDTO> roomOpt = hotelService.getRoomById(id);
         if (roomOpt.isEmpty()) {
-            System.out.println("Room not found with id: " + id);System.out.println();
             return ResponseEntity.notFound().build();
         }
-        System.out.println("Room found: " + roomOpt.get().getRoomNumber());
         return ResponseEntity.ok(roomOpt.get());
     }
 
@@ -217,17 +211,10 @@ public class BookingController {
     return ResponseEntity.ok(hotelService.cancelBooking(id));
 
     }
-    @GetMapping("/booking")
-    public Object getBookingByUser(@RequestParam String name, @RequestParam String email) {
-       // User user = new User(name, email);
-      //  return hotelService.getBookingsByUser(user);
-        return "get all bookings for a user";
-    }
-
-    @GetMapping("/bookings")
-    public List<BookingDTO> getAllBookings() {
+     @GetMapping("/bookings")
+    public List<BookingDTO> getAllBookings(Authentication auth) {
         System.out.println("Start get bookings");
-        return hotelService.getAllBookings();
+        return hotelService.getAllBookings(auth);
     }
 
     @GetMapping("/bookings/active")
