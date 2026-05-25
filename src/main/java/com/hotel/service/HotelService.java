@@ -10,6 +10,7 @@ import com.hotel.security.UserPrincipal;
 import com.hotel.service.result.Result;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -332,7 +333,10 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
         UserPrincipal user = (UserPrincipal) auth.getPrincipal();
         System.out.println("User email: " + user.getEmail());
 
-        if (user.getAuthorities().contains("ROLE_ADMIN")) {
+        boolean isAdmin = user.getAuthorities().contains(
+                new SimpleGrantedAuthority("ROLE_ADMIN")
+        );
+        if (isAdmin) {
             System.out.printf("");
             return bookingRepo.findByCheckInDateGreaterThanEqualAndStatus(
                             LocalDate.now(),
@@ -355,7 +359,10 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
         UserPrincipal user = (UserPrincipal) auth.getPrincipal();
         System.out.println("User email: " + user.getEmail());
 
-        if (user.getAuthorities().contains("ROLE_ADMIN")) {
+        boolean isAdmin = user.getAuthorities().contains(
+                new SimpleGrantedAuthority("ROLE_ADMIN")
+        );
+        if (isAdmin) {
             System.out.println("Admin user, fetching all future bookings");
             return bookingRepo.findByCheckInDateGreaterThanEqual(LocalDate.now())
                     .stream()
@@ -375,7 +382,11 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
     public List<BookingDTO> getHistoryBookings(Authentication auth) {
         UserPrincipal user = (UserPrincipal) auth.getPrincipal();
         System.out.println("User email: " + user.getEmail());
-        if (user.getAuthorities().contains("ROLE_ADMIN")) {
+
+        boolean isAdmin = user.getAuthorities().contains(
+                new SimpleGrantedAuthority("ROLE_ADMIN")
+        );
+        if (isAdmin) {
             System.out.println("Admin user, fetching all history bookings");
             return bookingRepo.findByCheckInDateLessThan(LocalDate.now())
                     .stream()
