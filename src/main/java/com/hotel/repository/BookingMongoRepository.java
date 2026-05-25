@@ -38,5 +38,5 @@ public interface BookingMongoRepository
 
     List<Booking> findByUserIdAndCheckInDateLessThan(String id, LocalDate now);
 
-    List<Booking>  findByUserIdCheckInDateGreaterThanEqual(String id, LocalDate now);
+    List<Booking>  findByUserIdAndCheckInDateGreaterThanEqual(String id, LocalDate now);
 }

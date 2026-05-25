@@ -370,7 +370,7 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
                     .toList();
         }
 
-        return bookingRepo.findByUserIdCheckInDateGreaterThanEqual(
+        return bookingRepo.findByUserIdAndCheckInDateGreaterThanEqual(
                         user.getId(),
                         LocalDate.now())
                 .stream()
