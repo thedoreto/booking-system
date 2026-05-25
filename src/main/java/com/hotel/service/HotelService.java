@@ -328,27 +328,63 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
         roomRepo.save(room);
     }
 
-    public List<BookingDTO> getActiveBookings() {
-        return bookingRepo.findByCheckInDateGreaterThanEqualAndStatus(
-                LocalDate.now(),
-                BookingStatus.CONFIRMED
-        ).stream()
-                .map(this::convertBookingToDTO)
-                .toList();
-    }
+    public List<BookingDTO> getActiveBookings(Authentication auth) {
+        UserPrincipal user = (UserPrincipal) auth.getPrincipal();
 
-    public List<BookingDTO> getFutureBookings() {
-        return bookingRepo.findByCheckInDateGreaterThanEqual(LocalDate.now())
+        if (user.getAuthorities().contains("ROLE_ADMIN")) {
+            return bookingRepo.findByCheckInDateGreaterThanEqualAndStatus(
+                            LocalDate.now(),
+                            BookingStatus.CONFIRMED
+                    ).stream()
+                    .map(this::convertBookingToDTO)
+                    .toList();
+        }
+        System.out.println("User id: " + user.getId());
+        return bookingRepo.findByUserIdAndCheckInDateGreaterThanEqualAndStatus(
+                        user.getId(),
+                        LocalDate.now(),
+                        BookingStatus.CONFIRMED)
                 .stream()
                 .map(this::convertBookingToDTO)
                 .toList();
     }
 
-    public List<BookingDTO> getHistoryBookings() {
-        return bookingRepo.findByCheckInDateLessThan(LocalDate.now())
+    public List<BookingDTO> getFutureBookings(Authentication auth) {
+        UserPrincipal user = (UserPrincipal) auth.getPrincipal();
+
+        if (user.getAuthorities().contains("ROLE_ADMIN")) {
+            return bookingRepo.findByCheckInDateGreaterThanEqual(LocalDate.now())
+                    .stream()
+                    .map(this::convertBookingToDTO)
+                    .toList();
+        }
+        System.out.println("User id: " + user.getId());
+        return bookingRepo.findByUserIdAndCheckInDateGreaterThanEqualAndStatus(
+                        user.getId(),
+                        LocalDate.now(),
+                        BookingStatus.CONFIRMED)
                 .stream()
                 .map(this::convertBookingToDTO)
                 .toList();
+    }
+
+    public List<BookingDTO> getHistoryBookings(Authentication auth) {
+        UserPrincipal user = (UserPrincipal) auth.getPrincipal();
+
+        if (user.getAuthorities().contains("ROLE_ADMIN")) {
+            return bookingRepo.findByCheckInDateLessThan(LocalDate.now())
+                    .stream()
+                    .map(this::convertBookingToDTO)
+                    .toList();
+        }
+        System.out.println("User id: " + user.getId());
+        return bookingRepo.findByUserIdAndCheckInDateLessThan(
+                        user.getId(),
+                        LocalDate.now())
+                .stream()
+                .map(this::convertBookingToDTO)
+                .toList();
+
     }
 
     public List<ImageDTO> getAllImages() {

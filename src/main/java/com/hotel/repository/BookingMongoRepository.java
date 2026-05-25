@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
 @Repository
@@ -34,4 +35,6 @@ public interface BookingMongoRepository
     List<Booking> findByUserId(String id);
 
     List<Booking> findByroomId(String id);
+
+    List<Booking> findByUserIdAndCheckInDateLessThan(String id, LocalDate now);
 }

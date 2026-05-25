@@ -218,18 +218,18 @@ public class BookingController {
     }
 
     @GetMapping("/bookings/active")
-    public List<BookingDTO> getActiveBookings() {
-        return hotelService.getActiveBookings();
+    public List<BookingDTO> getActiveBookings(Authentication auth) {
+        return hotelService.getActiveBookings(auth);
     }
 
     @GetMapping("/bookings/future")
-    public List<BookingDTO> getFutureBookings() {
-        return hotelService.getFutureBookings();
+    public List<BookingDTO> getFutureBookings(Authentication auth) {
+        return hotelService.getFutureBookings(auth);
     }
 
     @GetMapping("/bookings/history")
-    public List<BookingDTO> getHistoryBookings() {
-        return hotelService.getHistoryBookings();
+    public List<BookingDTO> getHistoryBookings(Authentication auth) {
+        return hotelService.getHistoryBookings(auth);
     }
 
     public static class CreateBookingRequest {
