@@ -23,44 +23,45 @@ public class AgentService {
         this.toolRegistry = toolRegistry;
     }
 
-    public String handle(List<Message> messages) throws IOException {
+    public String handle(List<Message> messages) throws Exception {
 
-        String systemPrompt =
-                "Ти си помощен агент в CRM система. Отговаряш кратко. " +
-                        "Ако трябва да извикаш tool, върни JSON: " +
-                        "{type:'tool', tool:'name', input:'data'} иначе {type:'chat', content:'...' }";
+        String system = """
+            You are a CRM assistant.
+            Respond ONLY in JSON:
 
-        List<Message> enriched = new ArrayList<>(messages);
-        enriched.add(0, new Message("system", systemPrompt));
+            If tool needed:
+            { "type": "tool", "tool": "...", "input": "..." }
 
-        String response = llmClient.ask(enriched);
+            If normal chat:
+            { "type": "chat", "content": "..." }
+        """;
 
-        JsonNode node;
-        try {
-            node = objectMapper.readTree(response);
-        } catch (Exception e) {
-            // fallback → plain chat
-            return response;
-        }
+        List<Message> input = new ArrayList<>(messages);
+        input.add(0, new Message("system", system));
 
+        String raw = llmClient.ask(input);
+
+        JsonNode node = objectMapper.readTree(raw);
         String type = node.path("type").asText("chat");
 
-        if ("tool".equals(type)) {
-
-            String toolName = node.path("tool").asText();
-            String input = node.path("input").asText();
-
-            Tool tool = toolRegistry.find(toolName);
-
-            if (tool == null) {
-                return "Unknown tool: " + toolName;
-            }
-
-            String toolResult = tool.execute(input);
-
-            return llmClient.askWithToolResult(enriched, toolResult);
+        if (!"tool".equals(type)) {
+            return node.path("content").asText(raw);
         }
 
-        return node.path("content").asText(response);
+        String toolName = node.path("tool").asText();
+        String toolInput = node.path("input").asText();
+
+        Tool tool = toolRegistry.find(toolName);
+        if (tool == null) return "Unknown tool: " + toolName;
+
+        String toolResult = tool.execute(toolInput);
+
+        List<Message> withTool = new ArrayList<>(input);
+        withTool.add(new Message("system", "Tool result: " + toolResult));
+
+        String finalRaw = llmClient.ask(withTool);
+        JsonNode finalNode = objectMapper.readTree(finalRaw);
+
+        return finalNode.path("content").asText(toolResult);
     }
 }

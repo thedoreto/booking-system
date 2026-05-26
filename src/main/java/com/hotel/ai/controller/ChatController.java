@@ -21,7 +21,7 @@ public class ChatController {
     }
 
     @PostMapping("/chat")
-    public ChatResponse chat(@RequestBody ChatRequest request) throws IOException {
+    public ChatResponse chat(@RequestBody ChatRequest request) throws Exception {
         String reply = agentService.handle(request.getMessages());
         return new ChatResponse(reply);
     }
