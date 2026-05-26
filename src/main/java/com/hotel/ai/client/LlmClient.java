@@ -52,6 +52,13 @@ public class LlmClient {
          return callLLM(requestJson);
     }
 
+    public String askWithToolResult(List<Message> messages, String toolResult) throws IOException {
+        messages.add(new Message("system", "Tool result: " + toolResult));
+        return ask(messages);
+    }
+
+//    record RequestBody(String model, List<Message> messages) {}
+
     private String callLLM(String message) throws IOException {
 
         // reuse the injected client if available
