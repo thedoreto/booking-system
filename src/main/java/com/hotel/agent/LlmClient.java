@@ -42,16 +42,14 @@ public class LlmClient {
     public String ask(List<Message> messages) throws IOException {
         String content = "";
         for (Message msg : messages) {
-             content = msg.getContent().toLowerCase();
+            content = msg.getContent().toLowerCase();
 
-            // 1. TOOL trigger пример
             if (content.contains("поръчки")) {
-                    return "CALL_TOOL_GET_ORDERS";
+                return "CALL_TOOL_GET_ORDERS";
             }
 
-            // 2. BLOCK / reject пример
             if (content.contains("парола")) {
-                 return "Нямам право да давам тази информация.";
+                return "Нямам право да давам тази информация.";
             }
         }
 
@@ -96,6 +94,8 @@ public class LlmClient {
         try (Response response = httpClient.newCall(request).execute()) {
             ResponseBody respBody = response.body();
             return extractReply(respBody.string());
+        } catch (Exception e) {
+            throw new IOException("Error occurred while calling LLM API", e);
         }
     }
 
