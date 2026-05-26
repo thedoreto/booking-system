@@ -1,7 +1,9 @@
 package com.hotel.ai.tool;
 
 
+import org.springframework.security.core.Authentication;
+
 public interface Tool {
     String name();
-    String execute(String input);
+    ToolResult execute(Authentication auth);
 }

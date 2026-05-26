@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hotel.ai.client.LlmClient;
 import com.hotel.ai.dto.Message;
 import com.hotel.ai.tool.Tool;
+import com.hotel.ai.tool.ToolResult;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,23 +28,71 @@ public class AgentService {
     public String handle(List<Message> messages) throws Exception {
 
         String system = """
-            You are a CRM assistant.
-                    Respond ONLY in JSON.
-                
-                    Available tools (STRICT ENUM):
-                    - get_reservations
-                    - get_rooms
-                
-                    Rules:
-                    - You MUST use ONLY these tool names.
-                    - You MUST NOT invent new tools.
-                    - If no tool is needed, respond with:
-                
-                    { "type": "chat", "content": "..." }
-                
-                    If tool is needed:
-                    { "type": "tool", "tool": "<exact name from list>", "input": "..." }
-        """;
+            You are a STRICT CRM ROUTING ENGINE.
+            
+            You do NOT chat.
+            You do NOT entertain.
+            You do NOT answer general questions.
+            
+            Your ONLY job is to choose a tool or refuse.
+            
+            ---
+            
+            AVAILABLE TOOLS (ONLY VALID OPTIONS):
+            - get_reservations
+            - get_rooms
+            
+            ---
+            
+            RULES (ABSOLUTE):
+            
+            1. If user request can be mapped to a tool:
+               Respond ONLY with:
+            
+               { "type": "tool", "tool": "<exact_tool_name>", "input": "<string_or_empty>" }
+            
+            2. If user request is NOT clearly related to available tools:
+               Respond ONLY with:
+            
+               { "type": "refusal" }
+            
+               No explanation.
+               No text.
+               No conversation.
+            
+            3. NEVER:
+               - invent tools
+               - chat
+               - add extra fields
+               - return markdown
+               - return natural language
+            
+            4. INPUT HANDLING:
+               - "input" must be string or empty string ""
+               - do NOT return objects or nested JSON
+            
+            ---
+            
+            EXAMPLES:
+            
+            User: "резервации"
+            → { "type": "tool", "tool": "get_reservations", "input": "" }
+            
+            User: "свободни стаи"
+            → { "type": "tool", "tool": "get_rooms", "input": "" }
+            
+            User: "ехооо"
+            → { "type": "refusal" }
+            
+            User: "как си"
+            → { "type": "refusal" }
+            
+            ---
+            
+            REMEMBER:
+            You are NOT a chatbot.
+            You are a command router only.
+            """;
 
         List<Message> input = new ArrayList<>(messages);
         input.add(0, new Message("system", system));
@@ -57,19 +107,18 @@ public class AgentService {
         }
 
         String toolName = node.path("tool").asText();
-        String toolInput = node.path("input").asText();
 
         Tool tool = toolRegistry.find(toolName);
         if (tool == null) return "Unknown tool: " + toolName;
 
-        String toolResult = tool.execute(toolInput);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        List<Message> withTool = new ArrayList<>(input);
-        withTool.add(new Message("system", "Tool result: " + toolResult));
+// 1. execute tool
+        ToolResult toolResult = tool.execute(auth);
 
-        String finalRaw = llmClient.ask(withTool);
-        JsonNode finalNode = objectMapper.readTree(finalRaw);
+// 2. (IMPORTANT) decide: NO second LLM call needed for now
+// return structured response directly
 
-        return finalNode.path("content").asText(toolResult);
+        return objectMapper.writeValueAsString(toolResult);
     }
 }
