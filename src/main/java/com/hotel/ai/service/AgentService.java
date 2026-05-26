@@ -27,13 +27,21 @@ public class AgentService {
 
         String system = """
             You are a CRM assistant.
-            Respond ONLY in JSON:
-
-            If tool needed:
-            { "type": "tool", "tool": "...", "input": "..." }
-
-            If normal chat:
-            { "type": "chat", "content": "..." }
+                    Respond ONLY in JSON.
+                
+                    Available tools (STRICT ENUM):
+                    - get_reservations
+                    - get_rooms
+                
+                    Rules:
+                    - You MUST use ONLY these tool names.
+                    - You MUST NOT invent new tools.
+                    - If no tool is needed, respond with:
+                
+                    { "type": "chat", "content": "..." }
+                
+                    If tool is needed:
+                    { "type": "tool", "tool": "<exact name from list>", "input": "..." }
         """;
 
         List<Message> input = new ArrayList<>(messages);
