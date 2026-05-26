@@ -40,22 +40,21 @@ public class LlmClient {
     }
 
     public String ask(List<Message> messages) throws IOException {
-        String content = "";
-        for (Message msg : messages) {
-            content = msg.getContent().toLowerCase();
+        String content =  messages.get(messages.size() - 1).getContent().toLowerCase();
 
-            if (content.contains("поръчки")) {
-                return "CALL_TOOL_GET_ORDERS";
+        // 1. ако има ключова дума за инструмент → CALL_TOOL
+            if (content.contains("резервация") || content.contains("резервации")) {
+                return "CALL_TOOL_GET_RESERVATIONS";
             }
 
-            if (content.contains("парола")) {
+            if (content.contains("парола") || content.contains("пароли") || content.contains("паролата")) {
                 return "Нямам право да давам тази информация.";
             }
-        }
+
 
             // 3. ако няма правила → LLM
-         String requestJson = buildRequest(messages);
-         return callLLM(requestJson);
+       //  String requestJson = buildRequest(messages);
+         return callLLM(content);
 
     //    Map<String, Object> body = new HashMap<>();
     //    body.put("model", "llama-3.1-8b-instant");
