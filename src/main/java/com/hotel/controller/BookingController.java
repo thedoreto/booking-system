@@ -39,7 +39,8 @@ public class BookingController {
         return Map.of(
                 "id", user.getId(),
                 "email", user.getEmail(),
-                "role", user.getRole()
+                "role", user.getRole(),
+                "name", user.getName()
         );
     }
 
