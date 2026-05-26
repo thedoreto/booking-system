@@ -13,19 +13,9 @@ import java.util.Map;
 
 @Service
 public class LlmClient {
-    // example JSON template (not used) kept for reference
-    private String json = """
-        {
-          "model": "llama-3.1-8b-instant",
-          "messages": [
-            {
-              "role": "user",
-              "content": "Колко е 15-8?"
-            }
-          ]
-        }
-        """;
+
     private String model = "llama-3.1-8b-instant";
+
     @Value("${llm.api.key}")
     private String apiKey;
 
@@ -41,41 +31,24 @@ public class LlmClient {
 
     public String ask(List<Message> messages) throws IOException {
         String content =  messages.get(messages.size() - 1).getContent().toLowerCase();
+        System.out.println("Received user message: " + content);
 
         // 1. ако има ключова дума за инструмент → CALL_TOOL
-            if (content.contains("резервация") || content.contains("резервации")) {
-                return "CALL_TOOL_GET_RESERVATIONS";
-            }
-
-            if (content.contains("парола") || content.contains("пароли") || content.contains("паролата")) {
-                return "Нямам право да давам тази информация.";
-            }
-
-
-            // 3. ако няма правила → LLM
-       //  String requestJson = buildRequest(messages);
-         return callLLM(content);
-
-    //    Map<String, Object> body = new HashMap<>();
-    //    body.put("model", "llama-3.1-8b-instant");
-        // OpenAI-style chat completion expects a messages array
-    //    body.put("messages", messages);
-
-        // сериализация на body в JSON с Jackson
-    //    String requestJson = objectMapper.writeValueAsString(body);
-
-        //return callLLM(requestJson);
-    }
-
-    private String buildRequest(List<Message> messages) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("model", model);
-        body.put("messages", messages);
-        try {
-            return objectMapper.writeValueAsString(body);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to serialize request body", e);
+        if (content.contains("резервация") || content.contains("резервации")) {
+            return "CALL_TOOL_GET_RESERVATIONS";
         }
+
+        if (content.contains("стая") || content.contains("стаи") || content.contains("стаята")) {
+            return "CALL_TOOL_GET_ROOMS";
+        }
+
+        if (content.contains("парола") || content.contains("пароли") || content.contains("паролата")) {
+            return "Нямам право да давам тази информация.";
+        }
+
+        // 3. ако няма правила → LLM
+         String requestJson = buildRequest(messages);
+         return callLLM(requestJson);
     }
 
     private String callLLM(String message) throws IOException {
@@ -95,6 +68,17 @@ public class LlmClient {
             return extractReply(respBody.string());
         } catch (Exception e) {
             throw new IOException("Error occurred while calling LLM API", e);
+        }
+    }
+
+    private String buildRequest(List<Message> messages) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("model", model);
+        body.put("messages", messages);
+        try {
+            return objectMapper.writeValueAsString(body);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to serialize request body", e);
         }
     }
 
