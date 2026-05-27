@@ -4,6 +4,8 @@ import com.hotel.ai.context.ToolContext;
 import com.hotel.ai.dto.DateRange;
 import com.hotel.booking.service.HotelService;
 import com.hotel.common.util.ValidationUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -11,6 +13,7 @@ import java.time.LocalDate;
 @Component
 public class RoomsPerDates implements Tool {
 
+    private static final Logger log = LoggerFactory.getLogger(RoomsPerDates.class);
     private HotelService hotelService;
 
     public RoomsPerDates(HotelService hotelService) {
@@ -24,6 +27,8 @@ public class RoomsPerDates implements Tool {
 
     @Override
     public ToolResult execute(ToolContext ctx) {
+
+        log.info("Executing tool {} with context: {}", name(), ctx);
 
         DateRange dateRange = ctx.getDateRange();
         if (dateRange == null || dateRange.getFrom() == null || dateRange.getTo() == null) {

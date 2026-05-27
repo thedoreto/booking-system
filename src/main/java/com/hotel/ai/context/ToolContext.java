@@ -19,6 +19,13 @@ public class ToolContext {
         this.dateRange = dateRange;
     }
 
+    @Override
+    public String toString() {
+        String toolContextStr = (dateRange != null) ? " DateRange: [" + dateRange.getFrom() + " to " + dateRange.getTo() + "]" : "";
+        toolContextStr += " Auth: [" + auth.getAuthorities() + "]" + " rawUserMessage: [" + rawUserMessage + "]";
+        return "ToolContext{" + toolContextStr + "}";
+    }
+
     public Authentication getAuth() {return auth;}
     public void setAuth(Authentication auth) { this.auth = auth; }
     public String getRawUserMessage() { return rawUserMessage; }

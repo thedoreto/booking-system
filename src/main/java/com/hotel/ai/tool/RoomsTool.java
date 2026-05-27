@@ -3,6 +3,8 @@ package com.hotel.ai.tool;
 import com.hotel.ai.context.ToolContext;
 import com.hotel.booking.dto.RoomDTO;
 import com.hotel.booking.service.HotelService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +13,7 @@ import java.util.List;
 @Component
 public class RoomsTool implements Tool {
 
+    private static final Logger log = LoggerFactory.getLogger(RoomsTool.class);
     private HotelService hotelService;
 
     public RoomsTool(HotelService hotelService) {
@@ -24,6 +27,7 @@ public class RoomsTool implements Tool {
 
     @Override
     public ToolResult execute(ToolContext ctx) {
+        log.info("Executing tool {} with context: {}", name(), ctx);
         List<RoomDTO> roomDTOS = hotelService.getAllRooms();
         return ToolResult.ok(roomDTOS);
     }
