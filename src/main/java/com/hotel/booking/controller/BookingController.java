@@ -42,20 +42,11 @@ public class BookingController {
         );
     }
 
-    @GetMapping
-    public ResponseEntity<Object> getAvailableRooms(@RequestParam String checkInDate, @RequestParam String checkOutDate) {
+    @GetMapping("/rooms/available")
+    public ResponseEntity<List<RoomDTO>> getAvailableRooms(@RequestParam String checkInDate, @RequestParam String checkOutDate) {
         LocalDate checkIn = LocalDate.parse(checkInDate);
         LocalDate checkOut = LocalDate.parse(checkOutDate);
-        Result<List<RoomDTO>> result = hotelService.findAvailableRooms(checkIn, checkOut);
-        if (!result.isSuccess()) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(result.getError());
-        }
-
-        return ResponseEntity.ok(result.getData());
-
-
+        return ResponseEntity.ok(hotelService.findAvailableRooms(checkIn, checkOut));
     }
 
     @GetMapping("/home")
@@ -190,8 +181,8 @@ public class BookingController {
   "checkOutDate": "2026-05-25"
 }*/
     @PostMapping("/bookings")
-    public ResponseEntity<BookingDTO> createBooking(@RequestBody BookingDTO bookingDTO) {
-        BookingDTO result = hotelService.createBooking(bookingDTO);
+    public ResponseEntity<List<BookingDTO>> createBooking(@RequestBody List<BookingDTO> bookingDTOS) {
+        List<BookingDTO> result = hotelService.createBooking(bookingDTOS);
         return ResponseEntity.ok(result);
 
     }

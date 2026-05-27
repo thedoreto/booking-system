@@ -43,41 +43,47 @@ public class HotelService {
         rebuildIndex();
     }
 //String checkInString, String  checkOutString, String userId, String roomId
-public BookingDTO createBooking(BookingDTO bookingDTO) {
+public List<BookingDTO> createBooking(List<BookingDTO> bookingDTOS) {
 
-    if (bookingDTO == null) {
+    if (bookingDTOS == null || bookingDTOS.isEmpty()) {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid booking");
     }
 
-    String userId = bookingDTO.getUserId();
-    String roomId = bookingDTO.getRoomId();
+    List<BookingDTO> createdBookings = new ArrayList<>();
+    for (BookingDTO bookingDTO : bookingDTOS) {
 
-    if (userId == null || roomId == null ||
-            userId.isBlank() || roomId.isBlank()) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input");
+        String userId = bookingDTO.getUserId();
+        String roomId = bookingDTO.getRoomId();
+
+        if (userId == null || roomId == null ||  userId.isBlank() || roomId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid input");
+        }
+
+        LocalDate checkInDate = bookingDTO.getCheckInDate();
+        LocalDate checkOutDate = bookingDTO.getCheckOutDate();
+        if (!ValidationUtil.isValidPeriod(checkInDate, checkOutDate)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid dates");
+        }
+
+        if (!isRoomAvailable(roomId, checkInDate, checkOutDate)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room not available");
+        }
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found"));
+
+        Room room = roomRepo.findById(roomId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room not found"));
+
+        Booking booking = new Booking(userId, room, checkInDate.toString(), checkOutDate.toString());
+        bookingRepo.save(booking);
+        createdBookings.add(convertBookingToDTO(booking));
     }
-
-    LocalDate checkInDate = bookingDTO.getCheckInDate();
-    LocalDate checkOutDate = bookingDTO.getCheckOutDate();
-
-    if (!ValidationUtil.isValidPeriod(checkInDate, checkOutDate)) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid dates");
-    }
-
-    if (!isRoomAvailable(roomId, checkInDate, checkOutDate)) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room not available");
-    }
-
-    User user = userRepo.findById(userId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found"));
-
-    Room room = roomRepo.findById(roomId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room not found"));
-
-    Booking booking = new Booking(userId, room, checkInDate.toString(), checkOutDate.toString());
-
-    return convertBookingToDTO(bookingRepo.save(booking));
+    return createdBookings;
 }
+
+
+
     public BookingDTO cancelBooking(String bookingId) {
         Optional<Booking> bookingOpt = bookingRepo.findById(bookingId);
         if (bookingOpt.isEmpty()) {
@@ -168,18 +174,16 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
         return Optional.of(convertRoomToDTO(roomOpt.get()));
     }
 
-    public Result<List<RoomDTO>> findAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate) {
+    public List<RoomDTO> findAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate) {
         if (!ValidationUtil.isValidPeriod(checkInDate, checkOutDate)) {
-            return Result.failure("Invalid date");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid dates");
         }
 
-        List<RoomDTO> rooms = roomRepo.findAll().stream()
+        return roomRepo.findAll().stream()
                 .filter(room -> isRoomAvailable(room.getId(), checkInDate, checkOutDate))
-                .map(this::convertRoomToDTO)
-                .toList();
-
-        return Result.success(rooms);
+                .map(this::convertRoomToDTO).toList();
     }
+
     public List<UserDTO> findAllUsers() {
         return userRepo.findAll().stream()
                 .map(this::convertUserToDTO)
