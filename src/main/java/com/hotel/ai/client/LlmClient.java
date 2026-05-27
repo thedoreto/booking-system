@@ -5,6 +5,7 @@ import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -40,7 +41,14 @@ public class LlmClient {
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
-            String json = response.body().string();
+            ResponseBody responseBody = response.body();
+            if (responseBody == null) {
+                throw new IOException("Empty response body from LLM API");
+            }
+            String json = responseBody.string();
+            if (!response.isSuccessful()) {
+                throw new IOException("API error: " + response.code() + " - " + json);
+            }
             return extractReply(json);
         }
     }
@@ -53,12 +61,22 @@ public class LlmClient {
     }
 
     private String extractReply(String json) throws IOException {
-        return objectMapper.readTree(json)
-                .path("choices")
-                .get(0)
-                .path("message")
-                .path("content")
-                .asText();
+        try {
+            JsonNode root = objectMapper.readTree(json);
+
+            // Check if response has the expected structure
+            if (root.has("choices") && root.get("choices").isArray() && root.get("choices").size() > 0) {
+                JsonNode choice = root.get("choices").get(0);
+                if (choice.has("message") && choice.get("message").has("content")) {
+                    return choice.get("message").get("content").asText();
+                }
+            }
+
+            // Fallback: if structure is unexpected, return the whole response
+            throw new IOException("Unexpected API response structure: " + json);
+        } catch (Exception e) {
+            throw new IOException("Failed to parse LLM response: " + e.getMessage(), e);
+        }
     }
 }
 
