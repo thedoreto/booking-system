@@ -1,5 +1,6 @@
 package com.hotel.ai.tool;
 
+import com.hotel.ai.context.ToolContext;
 import com.hotel.booking.dto.BookingDTO;
 import com.hotel.booking.service.HotelService;
 import org.springframework.security.core.Authentication;
@@ -22,8 +23,8 @@ public class ReservationsTool implements Tool {
     }
 
     @Override
-    public ToolResult execute(Authentication auth) {
-        List<BookingDTO> bookingDTOS = hotelService.getActiveBookings(auth);
+    public ToolResult execute(ToolContext ctx) {
+        List<BookingDTO> bookingDTOS = hotelService.getActiveBookings(ctx.getAuth());
         return ToolResult.ok(bookingDTOS);
     }
 }

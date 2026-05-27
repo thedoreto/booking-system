@@ -46,7 +46,7 @@ public class BookingController {
     public ResponseEntity<Object> getAvailableRooms(@RequestParam String checkInDate, @RequestParam String checkOutDate) {
         LocalDate checkIn = LocalDate.parse(checkInDate);
         LocalDate checkOut = LocalDate.parse(checkOutDate);
-        Result<List<RoomDTO>> result = hotelService.finaAvailableRooms(checkIn, checkOut);
+        Result<List<RoomDTO>> result = hotelService.findAvailableRooms(checkIn, checkOut);
         if (!result.isSuccess()) {
             return ResponseEntity
                     .badRequest()

@@ -20,6 +20,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.util.*;
 
+import com.hotel.common.util.ValidationUtil;
+
 @Service
 public class HotelService {
 
@@ -58,7 +60,7 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
     LocalDate checkInDate = bookingDTO.getCheckInDate();
     LocalDate checkOutDate = bookingDTO.getCheckOutDate();
 
-    if (!isValidPeriod(checkInDate, checkOutDate)) {
+    if (!ValidationUtil.isValidPeriod(checkInDate, checkOutDate)) {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid dates");
     }
 
@@ -109,10 +111,7 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
                 );
     }
 
-    private boolean isValidPeriod(LocalDate from, LocalDate to) {
-        return from != null && to != null
-                && !from.isAfter(to) && from.isAfter(LocalDate.now());
-    }
+
     private void rebuildIndex() {
         bookingsByRoomId.clear();
         for (Booking b: bookingRepo.findAll()) {
@@ -169,8 +168,8 @@ public BookingDTO createBooking(BookingDTO bookingDTO) {
         return Optional.of(convertRoomToDTO(roomOpt.get()));
     }
 
-    public Result<List<RoomDTO>> finaAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate) {
-        if (!isValidPeriod(checkInDate, checkOutDate)) {
+    public Result<List<RoomDTO>> findAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate) {
+        if (!ValidationUtil.isValidPeriod(checkInDate, checkOutDate)) {
             return Result.failure("Invalid date");
         }
 

@@ -1,5 +1,6 @@
 package com.hotel.ai.tool;
 
+import com.hotel.ai.context.ToolContext;
 import com.hotel.booking.dto.RoomDTO;
 import com.hotel.booking.service.HotelService;
 import org.springframework.security.core.Authentication;
@@ -22,7 +23,7 @@ public class RoomsTool implements Tool {
     }
 
     @Override
-    public ToolResult execute(Authentication auth) {
+    public ToolResult execute(ToolContext ctx) {
         List<RoomDTO> roomDTOS = hotelService.getAllRooms();
         return ToolResult.ok(roomDTOS);
     }

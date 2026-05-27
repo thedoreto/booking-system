@@ -3,9 +3,12 @@ package com.hotel.ai.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hotel.ai.client.LlmClient;
+import com.hotel.ai.context.ToolContext;
+import com.hotel.ai.dto.DateRange;
 import com.hotel.ai.dto.Message;
 import com.hotel.ai.tool.Tool;
 import com.hotel.ai.tool.ToolResult;
+import com.hotel.common.util.ValidationUtil;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -19,15 +22,7 @@ public class AgentService {
     private final LlmClient llmClient;
     private final ToolRegistry toolRegistry;
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    public AgentService(LlmClient llmClient, ToolRegistry toolRegistry) {
-        this.llmClient = llmClient;
-        this.toolRegistry = toolRegistry;
-    }
-
-    public Object handle(List<Message> messages) throws Exception {
-
-        String system = """
+    private final String system = """
             You are a STRICT CRM ROUTING ENGINE.
             
             You do NOT chat.
@@ -39,8 +34,34 @@ public class AgentService {
             ---
             
             AVAILABLE TOOLS (ONLY VALID OPTIONS):
-            - get_reservations
-            - get_rooms
+                Имаш достъп до следните tools:
+                
+                1. get_reservations
+                - връща всички резервации
+                
+                2. get_rooms
+                - връща всички стаи
+                
+                3. get_rooms_per_dates
+                - намира свободни стаи за даден период
+                - arguments:
+                    - checkin (format: yyyy-MM-dd)
+                    - checkout (format: yyyy-MM-dd)
+                
+                Когато потребителят иска свободни стаи за период,
+                трябва да извикаш:
+                
+                {
+                  "type": "tool",
+                  "tool": "get_rooms_per_dates",
+                  "arguments": {
+                      "checkin": "2026-06-01",
+                      "checkout": "2026-06-05"
+                  }
+                }
+                
+                Не измисляй дати.
+                Ако липсват дати — поискай ги от потребителя.
             
             ---
             
@@ -94,6 +115,13 @@ public class AgentService {
             You are a command router only.
             """;
 
+    public AgentService(LlmClient llmClient, ToolRegistry toolRegistry) {
+        this.llmClient = llmClient;
+        this.toolRegistry = toolRegistry;
+    }
+
+    public Object handle(List<Message> messages) throws Exception {
+
         List<Message> input = new ArrayList<>(messages);
         input.add(0, new Message("system", system));
 
@@ -107,18 +135,31 @@ public class AgentService {
         }
 
         String toolName = node.path("tool").asText();
-
         Tool tool = toolRegistry.find(toolName);
-        if (tool == null) return "Unknown tool: " + toolName;
 
+        if (tool == null) {
+            return "Unknown tool: " + toolName;
+        }
+
+        String userMessage = messages.get(messages.size() - 1).getContent();
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-// 1. execute tool
-        ToolResult toolResult = tool.execute(auth);
+        ToolContext ctx;
 
-// 2. (IMPORTANT) decide: NO second LLM call needed for now
-// return structured response directly
+        // ONLY special-case parameter enrichment
+        if (toolName.equals("get_rooms_per_dates")) {
+            DateRange range = ValidationUtil.extractDateRange(userMessage);
+            if (range == null) {
+                return ToolResult.error("MISSING_DATES");
+            }
 
-        return toolResult;
+            ctx = new ToolContext(auth, userMessage, range);
+        } else {
+            ctx = new ToolContext(auth, userMessage);
+        }
+
+        return tool.execute(ctx);
     }
+
+
 }
