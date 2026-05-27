@@ -1,11 +1,11 @@
 package com.hotel.ai.dto;
 
 public class ChatResponse {
-    private String reply;
+    private Object reply;
 
-    public ChatResponse(String reply) {
+    public ChatResponse(Object reply) {
         this.reply = reply;
     }
 
-    public String getReply() { return reply; }
+    public Object getReply() { return reply; }
 }

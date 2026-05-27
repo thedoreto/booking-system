@@ -25,7 +25,7 @@ public class AgentService {
         this.toolRegistry = toolRegistry;
     }
 
-    public String handle(List<Message> messages) throws Exception {
+    public Object handle(List<Message> messages) throws Exception {
 
         String system = """
             You are a STRICT CRM ROUTING ENGINE.
@@ -97,7 +97,7 @@ public class AgentService {
         List<Message> input = new ArrayList<>(messages);
         input.add(0, new Message("system", system));
 
-        String raw = llmClient.ask(input);
+        String raw = llmClient.complete(input);
 
         JsonNode node = objectMapper.readTree(raw);
         String type = node.path("type").asText("chat");
@@ -119,6 +119,6 @@ public class AgentService {
 // 2. (IMPORTANT) decide: NO second LLM call needed for now
 // return structured response directly
 
-        return objectMapper.writeValueAsString(toolResult);
+        return toolResult;
     }
 }

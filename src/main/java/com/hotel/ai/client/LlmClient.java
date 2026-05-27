@@ -28,7 +28,7 @@ public class LlmClient {
         this.client = client;
     }
 
-    public String ask(List<Message> messages) throws IOException {
+    public String complete(List<Message> messages) throws IOException {
 
         String body = buildRequest(messages);
 
