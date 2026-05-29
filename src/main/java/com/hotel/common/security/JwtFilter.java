@@ -37,26 +37,34 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String token = header.substring(7);
 
-        Claims claims = jwtService.extractClaims(token);
-        String userId = claims.get("userId", String.class);
-        String role = claims.get("role", String.class);
-        String email = claims.getSubject();
+        try {
+            Claims claims = jwtService.extractClaims(token);
 
-        UserPrincipal principal = new UserPrincipal(
-                userId,
-                email,
-                "",
-                List.of(new SimpleGrantedAuthority(role))
-        );
+            String userId = claims.get("userId", String.class);
+            String role = claims.get("role", String.class);
+            String email = claims.getSubject();
 
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(
-                        principal,
-                        null,
-                        principal.getAuthorities()
-                );
+            UserPrincipal principal = new UserPrincipal(
+                    userId,
+                    email,
+                    "",
+                    List.of(new SimpleGrantedAuthority(role))
+            );
 
-        SecurityContextHolder.getContext().setAuthentication(auth);
+            UsernamePasswordAuthenticationToken auth =
+                    new UsernamePasswordAuthenticationToken(
+                            principal,
+                            null,
+                            principal.getAuthorities()
+                    );
+
+            SecurityContextHolder.getContext().setAuthentication(auth);
+
+        } catch (Exception e) {
+            SecurityContextHolder.clearContext();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return; // спира request-а
+        }
 
         filterChain.doFilter(request, response);
     }
