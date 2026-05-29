@@ -187,23 +187,14 @@ public class BookingController {
 
     }
 
-
     /*PUT /bookings/{id}/cancel*/
     @PutMapping("/bookings/{id}/cancel")
     public ResponseEntity<BookingDTO> cancelBooking(@PathVariable String id) {
-     /*   Result<BookingDTO> result = hotelService.cancelBooking(id);
-        if (!result.isSuccess()) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(null);
-        }
-        return ResponseEntity.ok(result.getData());) {*/
-    return ResponseEntity.ok(hotelService.cancelBooking(id));
-
+        return ResponseEntity.ok(hotelService.cancelBooking(id));
     }
+
      @GetMapping("/bookings")
     public List<BookingDTO> getAllBookings(Authentication auth) {
-        System.out.println("Start get bookings");
         return hotelService.getAllBookings(auth);
     }
 

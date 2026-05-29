@@ -38,7 +38,6 @@ public class ResponseRenderer {
             for (BookingDTO booking : bookingDTOList) {
                 sb.append(String.format("Стая номер: " + booking.getRoomNumber() + ", от дата: " + booking.getCheckInDate() + " до дата: " + booking.getCheckOutDate() + "\n"));
             }
-            System.out.println("sb = " + sb);
             return sb.toString();
         } catch (Exception e) {
             return obj.toString();
@@ -52,7 +51,6 @@ public class ResponseRenderer {
             for (RoomDTO room : roomDTOList) {
                 sb.append("Стая номер: " + room.getRoomNumber() + " [" + room.getType() + "] - цена на вечер: " + room.getPricePerNight()).append("\n");
             }
-            System.out.println("sb = " + sb);
             return sb.toString();
         } catch (Exception e) {
             return obj.toString();

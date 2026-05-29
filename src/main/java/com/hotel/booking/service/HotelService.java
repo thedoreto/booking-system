@@ -154,7 +154,6 @@ public List<BookingDTO> createBooking(List<BookingDTO> bookingDTOS) {
                     .map(this::convertBookingToDTO)
                     .toList();
         }
-        System.out.println("User id: " + user.getId());
         return bookingRepo.findByUserId(user.getId()).stream()
                 .map(this::convertBookingToDTO)
                 .toList();
@@ -338,13 +337,11 @@ public List<BookingDTO> createBooking(List<BookingDTO> bookingDTOS) {
 
     public List<BookingDTO> getActiveBookings(Authentication auth) {
         UserPrincipal user = (UserPrincipal) auth.getPrincipal();
-        System.out.println("User email: " + user.getEmail());
 
         boolean isAdmin = user.getAuthorities().contains(
                 new SimpleGrantedAuthority("ADMIN")
         );
         if (isAdmin) {
-            System.out.println("Admin user, fetching all active bookings");
             return bookingRepo.findByCheckInDateGreaterThanEqualAndStatus(
                             LocalDate.now(),
                             BookingStatus.CONFIRMED
@@ -364,13 +361,11 @@ public List<BookingDTO> createBooking(List<BookingDTO> bookingDTOS) {
 
     public List<BookingDTO> getFutureBookings(Authentication auth) {
         UserPrincipal user = (UserPrincipal) auth.getPrincipal();
-        System.out.println("User email: " + user.getEmail());
 
         boolean isAdmin = user.getAuthorities().contains(
                 new SimpleGrantedAuthority("ADMIN")
         );
         if (isAdmin) {
-            System.out.println("Admin user, fetching all future bookings");
             return bookingRepo.findByCheckInDateGreaterThanEqual(LocalDate.now())
                     .stream()
                     .map(this::convertBookingToDTO)
@@ -387,13 +382,11 @@ public List<BookingDTO> createBooking(List<BookingDTO> bookingDTOS) {
 
     public List<BookingDTO> getHistoryBookings(Authentication auth) {
         UserPrincipal user = (UserPrincipal) auth.getPrincipal();
-        System.out.println("User email: " + user.getEmail());
 
         boolean isAdmin = user.getAuthorities().contains(
                 new SimpleGrantedAuthority("ADMIN")
         );
         if (isAdmin) {
-            System.out.println("Admin user, fetching all history bookings");
             return bookingRepo.findByCheckInDateLessThan(LocalDate.now())
                     .stream()
                     .map(this::convertBookingToDTO)

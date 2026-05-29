@@ -100,13 +100,8 @@ public class AgentService {
         }
 
         String raw = callLlm(userMessage);
-
-        System.out.println("LLM raw response: " + raw);
-
         JsonNode node = parseLlm(raw);
-
         Object result = execute(node, userMessage);
-        System.out.println("Execution result: " + result);
         cache.put(key, result);
         return result;
     }
