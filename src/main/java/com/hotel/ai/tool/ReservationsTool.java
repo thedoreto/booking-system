@@ -27,7 +27,7 @@ public class ReservationsTool implements Tool {
 
     @Override
     public ToolResult execute(ToolContext ctx) {
-        log.info("Executing tool {} with context: {}", name(), ctx);
+        log.info("Executing tool {} with context: {}", name(), ctx.getAuth());
         List<BookingDTO> bookingDTOS = hotelService.getActiveBookings(ctx.getAuth());
         return ToolResult.ok(bookingDTOS);
     }
