@@ -14,6 +14,7 @@ import com.hotel.booking.service.result.Result;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -207,6 +208,10 @@ public List<BookingDTO> createBooking(List<BookingDTO> bookingDTOS) {
     }
 
     public Optional<UserDTO> updateUser(String id, UserDTO userDTO){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserPrincipal currentUser = (UserPrincipal) auth.getPrincipal();
+        boolean isSelfUpdate = currentUser.getId().equals(userDTO.getId());
+
         User user = userRepo.findById(id)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
@@ -218,8 +223,10 @@ public List<BookingDTO> createBooking(List<BookingDTO> bookingDTOS) {
         }
 
         user.setName(userDTO.getName());
-        user.setRole(userDTO.getRole());
-        //user.setPassword(userDTO.getPassword());
+        if (!isSelfUpdate) {
+            user.setRole(userDTO.getRole());   //not allowed to change own role
+        }
+        //user.setPassword(userDTO.getPassword());// not allowed to change password here
         User updated = userRepo.save(user);
         return Optional.of(convertUserToDTO(updated));
 
