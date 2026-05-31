@@ -26,6 +26,11 @@ public class RoomsPerDates implements Tool {
     }
 
     @Override
+    public boolean isToolCachable() {
+        return false;
+    }
+
+    @Override
     public ToolResult execute(ToolContext ctx) {
 
         log.info("Executing tool {} with context: {}", name(), ctx);

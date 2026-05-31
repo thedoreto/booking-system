@@ -16,15 +16,15 @@ public class ResponseRenderer {
         return switch (toolName) {
 
             case "get_reservations" ->
-                    "Вашите активни резервации са: "
+                    "Вашите активни резервации са: \n"
                             + bookingsResult(result);
 
             case "get_rooms_per_dates" ->
-                    "Свободните стаи за избраните дати са: "
+                    "Свободните стаи за избраните дати са: \n"
                             + roomsResult(result);
 
             case "get_rooms" ->
-                    "Всички стаи са: "
+                    "Всички стаи са: \n"
                             + roomsResult(result);
             default ->
                     toJson(result);

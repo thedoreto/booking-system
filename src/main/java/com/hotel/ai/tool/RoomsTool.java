@@ -26,6 +26,11 @@ public class RoomsTool implements Tool {
     }
 
     @Override
+    public boolean isToolCachable() {
+        return true;
+    }
+
+    @Override
     public ToolResult execute(ToolContext ctx) {
         log.info("Executing tool {} with context: {}", name(), ctx);
         List<RoomDTO> roomDTOS = hotelService.getAllRooms();

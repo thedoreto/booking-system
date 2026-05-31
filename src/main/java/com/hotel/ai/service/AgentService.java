@@ -157,11 +157,9 @@ public class AgentService {
     private Object execute(JsonNode node, String userMessage) {
 
         String type = node.path("type").asText("chat");
-
         if (!"tool".equals(type)) {
             return node.path("content").asText();
         }
-
         String toolName = node.path("tool").asText();
         Tool tool = toolRegistry.find(toolName);
 
@@ -196,29 +194,31 @@ public class AgentService {
 
         String m = message.toLowerCase().trim();
 
-        if (m.equals("hi") || m.equals("hello") || m.equals("hey") || m.equals("eho")) {
-            return chat("Здрасти. Мога да помагам с резервации и стаи.");
+        if (m.equals("hi") || m.equals("hello") || m.equals("hey") || m.equals("eho")
+                    || m.equals("здравей") || m.equals("здрасти") || m.equals("привет")
+                    || m.equals("ехо")) {
+            return new StringBuffer("Здрасти. Мога да помагам с резервации и стаи.");
         }
 
         if (m.contains("какво можеш") || m.contains("what can you do")) {
-            return chat("Мога да управлявам резервации и налични стаи.");
+            return new StringBuffer("Мога да управлявам резервации и налични стаи.");
         }
 
         if (m.equals("как си") || m.equals("how are you")) {
-            return chat("Готов съм да помагам с резервации и стаи.");
+            return new StringBuffer("Готов съм да помагам с резервации и стаи.");
         }
 
         if (m.length() < 3) {
-            return chat("Може ли да уточниш какво имаш предвид?");
+            return new StringBuffer("Може ли да уточниш какво имаш предвид?");
         }
 
         return null;
     }
 
-    private Object chat(String msg) {
+  /*  private Object chat(String msg) {
         ObjectNode node = objectMapper.createObjectNode();
         node.put("type", "chat");
         node.put("content", msg);
         return node;
-    }
+    }*/
 }

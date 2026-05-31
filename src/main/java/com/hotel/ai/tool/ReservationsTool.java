@@ -5,7 +5,6 @@ import com.hotel.booking.dto.BookingDTO;
 import com.hotel.booking.service.HotelService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -23,6 +22,11 @@ public class ReservationsTool implements Tool {
     @Override
     public String name() {
         return "get_reservations";
+    }
+
+    @Override
+    public boolean isToolCachable() {
+        return false;
     }
 
     @Override
