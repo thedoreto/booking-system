@@ -8,9 +8,12 @@ import com.hotel.ai.context.ToolContext;
 import com.hotel.ai.dto.DateRange;
 import com.hotel.ai.dto.Message;
 import com.hotel.ai.presentation.ResponseRenderer;
+import com.hotel.ai.tool.ReservationsTool;
 import com.hotel.ai.tool.Tool;
 import com.hotel.ai.tool.ToolResult;
 import com.hotel.common.util.ValidationUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -28,6 +31,8 @@ public class AgentService {
 
     private final Map<String, Object> cache = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private static final Logger log = LoggerFactory.getLogger(AgentService.class);
 
     private final String system = """
             You are a CRM assistant for a hotel system.
@@ -94,18 +99,37 @@ public class AgentService {
         if (cached != null) return cached;
 
         Object local = localRoute(userMessage);
+        log.info("Local route for message '{}': {}", userMessage, local);
         if (local != null) {
-            cache.put(key, local);
+        //    cache.put(key, local); //не е нужен при локален call, защото той е бърз и не натоварва системата, а искаме да запазим кеша за по-тежки операции
             return local;
         }
 
         String raw = callLlm(userMessage);
         JsonNode node = parseLlm(raw);
         Object result = execute(node, userMessage);
-        cache.put(key, result);
+        if (shouldCache(node, result)) {
+            System.out.println("Caching result for key: " + key);
+            cache.put(key, result);
+        }
         return result;
     }
+    private boolean shouldCache(JsonNode node, Object result) {
 
+        String type = node.path("type").asText("chat");
+
+        // chat винаги кешираш
+        if (!"tool".equals(type)) {
+            return true;
+        }
+
+        String toolName = node.path("tool").asText();
+        Tool tool = toolRegistry.find(toolName);
+
+        if (tool == null) return false;
+        String reqId = UUID.randomUUID().toString();
+        return tool.isToolCachable();
+    }
     private String extractUserMessage(List<Message> messages) {
         return messages.get(messages.size() - 1).getContent();
     }
@@ -168,25 +192,17 @@ public class AgentService {
         }
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
         ToolContext ctx;
-
         if ("get_rooms_per_dates".equals(toolName)) {
-
             DateRange range = ValidationUtil.extractDateRange(userMessage);
-
             if (range == null) {
-                return ToolResult.error("MISSING_DATES");
+                return ToolResult.error("Моля въведете вадни дати");
             }
-
             ctx = new ToolContext(auth, userMessage, range);
-
         } else {
             ctx = new ToolContext(auth, userMessage);
         }
-
         ToolResult result = tool.execute(ctx);
-
         return responseRenderer.render(toolName, result);
     }
 
