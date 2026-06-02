@@ -26,6 +26,9 @@ public class ResponseRenderer {
             case "get_rooms" ->
                     "Всички стаи са: \n"
                             + roomsResult(result);
+            case "strawberry_muffin" ->
+                    "Тук имаме само една рецепта: \n"
+                            + result.getData().toString();
             default ->
                     toJson(result);
         };
@@ -56,7 +59,7 @@ public class ResponseRenderer {
             return obj.toString();
         }
     }
-    private String toJson(Object obj) {
+    public String toJson(Object obj) {
         try {
             return new ObjectMapper().writeValueAsString(obj);
         } catch (Exception e) {

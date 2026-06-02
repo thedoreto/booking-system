@@ -35,51 +35,47 @@ public class AgentService {
     private static final Logger log = LoggerFactory.getLogger(AgentService.class);
 
     private final String system = """
-            You are a CRM assistant for a hotel system.
+            Return ONLY one JSON object.
             
-            Return exactly one JSON object and nothing else.
-            
-            Valid outputs:
-            
-            1) TOOL:
+            Format:
             {"type":"tool","tool":"<name>","arguments":{}}
+            or
+            {"type":"none"}
             
-            2) CHAT:
-            {"type":"chat","content":"<message>"}
-            
-            ---
-            
-            TOOLS:
+            Tools:
             - get_reservations
             - get_rooms
             - get_rooms_per_dates
+            - strawberry_muffin
             
-            ---
+            SPECIAL RULE (HIGHEST PRIORITY):
+                        If user mentions ANY cooking, food, or recipe → return:
+            {"type":"tool","tool":"strawberry_muffin","arguments":{}}
             
-            RULES:
+            Rules:
+            - get_reservations:
+              ALWAYS use TOOL (no parameters required)
+            - get_rooms:
+              ALWAYS use TOOL (no parameters required)
+            - get_rooms_per_dates:
+              Use TOOL only if dates are present.
+              If dates are missing → CHAT asking for dates.
+              
+              If no tool applies:
+              Return {"type":"none"}
+              DO NOT ask questions or explain anything.
             
-            If the user asks about:
-            - reservations
-            - rooms
-            - availability
-            → ALWAYS use TOOL
+            - Never guess missing parameters.
+            """;
+
+    private final String chatSystemPrompt = """
+            You are a conversational assistant.
             
-            If the user message is:
-            - greeting
-            - small talk
-            - “what can you do”
-            - “who are you”
-            - unclear question
-            → ALWAYS use CHAT
-            
-            If dates are needed for availability and missing → ask in CHAT.
-            
-            If unsure → CHAT.
-            
-            ---
-            
-            IMPORTANT:
-            Prefer TOOL whenever the message is about hotel data (rooms, reservations, availability).
+            Rules:
+            - No explanations about internal processing
+            - No mention of tools, models, or systems
+            - Be direct and concise
+            - Stay on user intent only
             """;
 
     public AgentService(LlmClient llmClient,
@@ -95,25 +91,53 @@ public class AgentService {
         String userMessage = extractUserMessage(messages);
         String key = buildCacheKey(userMessage);
 
+        // 1. CACHE
         Object cached = cache.get(key);
         if (cached != null) return cached;
 
-        Object local = localRoute(userMessage);
-        log.info("Local route for message '{}': {}", userMessage, local);
+        // 2. LOCAL ROUTE
+        String local = localRoute(userMessage);
         if (local != null) {
-        //    cache.put(key, local); //не е нужен при локален call, защото той е бърз и не натоварва системата, а искаме да запазим кеша за по-тежки операции
+            cache.put(key, local);
             return local;
         }
 
+        // 3. LLM FALLBACK
         String raw = callLlm(userMessage);
+        if (isOnlyChat(raw)) {
+            return callLlmChat(userMessage);
+        }
         JsonNode node = parseLlm(raw);
-        Object result = execute(node, userMessage);
+
+        Object result = resolveLlm(node, userMessage);
         if (shouldCache(node, result)) {
-            System.out.println("Caching result for key: " + key);
             cache.put(key, result);
         }
         return result;
     }
+
+    private boolean isOnlyChat(String raw) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode node = mapper.readTree(raw);
+            return "none".equals(node.path("type").asText());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private Object resolveLlm(JsonNode node, String userMessage) {
+
+        String type = node.path("type").asText("chat");
+
+        if (!"tool".equals(type)) {
+            return node.path("content").asText();
+        }
+
+        String toolName = node.path("tool").asText();
+        return executeTool(toolName, userMessage);
+    }
+
     private boolean shouldCache(JsonNode node, Object result) {
 
         String type = node.path("type").asText("chat");
@@ -153,6 +177,21 @@ public class AgentService {
         }
     }
 
+    private String callLlmChat(String userMessage) throws Exception {
+
+        List<Message> input = new ArrayList<>();
+        input.add(new Message("system", chatSystemPrompt));
+        input.add(new Message("user", userMessage));
+
+        try {
+            return llmClient.complete(input);
+
+        } catch (HttpClientErrorException.TooManyRequests e) {
+            Thread.sleep(6000 + new Random().nextInt(2000));
+            return llmClient.complete(input);
+        }
+    }
+
     private JsonNode parseLlm(String raw) {
 
         String cleaned = raw
@@ -178,25 +217,18 @@ public class AgentService {
         return node;
     }
 
-    private Object execute(JsonNode node, String userMessage) {
-
-        String type = node.path("type").asText("chat");
-        if (!"tool".equals(type)) {
-            return node.path("content").asText();
-        }
-        String toolName = node.path("tool").asText();
+    private Object executeTool(String toolName, String userMessage) {
+        log.info("Executing tool: " + toolName + " with message: " + userMessage);
         Tool tool = toolRegistry.find(toolName);
-
         if (tool == null) {
             return "Unknown tool: " + toolName;
         }
-
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         ToolContext ctx;
         if ("get_rooms_per_dates".equals(toolName)) {
             DateRange range = ValidationUtil.extractDateRange(userMessage);
             if (range == null) {
-                return ToolResult.error("Моля въведете вадни дати");
+                return "Моля въведете вадни дати";
             }
             ctx = new ToolContext(auth, userMessage, range);
         } else {
@@ -206,35 +238,31 @@ public class AgentService {
         return responseRenderer.render(toolName, result);
     }
 
-    private Object localRoute(String message) {
+    private String localRoute(String message) {
 
         String m = message.toLowerCase().trim();
 
         if (m.equals("hi") || m.equals("hello") || m.equals("hey") || m.equals("eho")
                     || m.equals("здравей") || m.equals("здрасти") || m.equals("привет")
                     || m.equals("ехо")) {
-            return new StringBuffer("Здрасти. Мога да помагам с резервации и стаи.");
+            return "Здрасти. Мога да помагам с резервации и стаи.";
         }
 
         if (m.contains("какво можеш") || m.contains("what can you do")) {
-            return new StringBuffer("Мога да управлявам резервации и налични стаи.");
+            return "Мога да управлявам резервации и налични стаи.";
         }
 
         if (m.equals("как си") || m.equals("how are you")) {
-            return new StringBuffer("Готов съм да помагам с резервации и стаи.");
+            return "Готов съм да помагам с резервации и стаи.";
         }
 
         if (m.length() < 3) {
-            return new StringBuffer("Може ли да уточниш какво имаш предвид?");
+            return "Може ли да уточниш какво имаш предвид?";
         }
 
         return null;
     }
 
-  /*  private Object chat(String msg) {
-        ObjectNode node = objectMapper.createObjectNode();
-        node.put("type", "chat");
-        node.put("content", msg);
-        return node;
-    }*/
+
+
 }

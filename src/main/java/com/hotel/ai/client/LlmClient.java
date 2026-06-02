@@ -42,6 +42,7 @@ public class LlmClient {
 
         try (Response response = client.newCall(request).execute()) {
             ResponseBody responseBody = response.body();
+            System.out.println("LLM API response code: " + responseBody);
             if (responseBody == null) {
                 throw new IOException("Empty response body from LLM API");
             }
