@@ -12,6 +12,8 @@ import com.hotel.ai.tool.ReservationsTool;
 import com.hotel.ai.tool.Tool;
 import com.hotel.ai.tool.ToolResult;
 import com.hotel.common.util.ValidationUtil;
+import com.hotel.knowledge.model.KnowledgeDocument;
+import com.hotel.knowledge.service.KnowledgeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -21,11 +23,13 @@ import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 public class AgentService {
 
     private final LlmClient llmClient;
+    private KnowledgeService knowledgeService;
     private final ToolRegistry toolRegistry;
     private final ResponseRenderer responseRenderer;
 
@@ -48,9 +52,14 @@ public class AgentService {
             - get_rooms_per_dates
             - strawberry_muffin
             
-            SPECIAL RULE (HIGHEST PRIORITY):
-                        If user mentions ANY cooking, food, or recipe → return:
+            SPECIAL RULE:
+            If user asks for a cooking recipe, ingredients, or cooking instructions,
+            return:
             {"type":"tool","tool":"strawberry_muffin","arguments":{}}
+            
+            Do NOT use this tool for hotel information about meals,
+            breakfast hours, restaurant opening times, or food availability.
+            Those questions should use the knowledge base.
             
             Rules:
             - get_reservations:
@@ -80,10 +89,12 @@ public class AgentService {
 
     public AgentService(LlmClient llmClient,
                         ToolRegistry toolRegistry,
-                        ResponseRenderer responseRenderer) {
+                        ResponseRenderer responseRenderer,
+                        KnowledgeService knowledgeService) {
         this.llmClient = llmClient;
         this.toolRegistry = toolRegistry;
         this.responseRenderer = responseRenderer;
+        this.knowledgeService = knowledgeService;
     }
 
     public Object handle(List<Message> messages) throws Exception {
@@ -102,18 +113,34 @@ public class AgentService {
             return local;
         }
 
-        // 3. LLM FALLBACK
+        // 3. CALL TOOL
         String raw = callLlm(userMessage);
-        if (isOnlyChat(raw)) {
-            return callLlmChat(userMessage);
-        }
-        JsonNode node = parseLlm(raw);
+        if (!isOnlyChat(raw)) {
+            JsonNode node = parseLlm(raw);
 
-        Object result = resolveLlm(node, userMessage);
-        if (shouldCache(node, result)) {
-            cache.put(key, result);
+            Object result = resolveLlm(node, userMessage);
+            if (shouldCache(node, result)) {
+                cache.put(key, result);
+            }
+            return result;
         }
-        return result;
+
+        // 4. VECTOR SEARCH
+        List<KnowledgeDocument> knowledge =
+                knowledgeService.findRelevant(userMessage);
+        if (!knowledge.isEmpty()) {
+            String context = knowledge.stream()
+                    .map(KnowledgeDocument::getText)
+                    .collect(Collectors.joining("\n"));
+
+            return callLlmWithContext(userMessage, context);
+        }
+        /* String answer = knowledge.get(0).getText();
+            cache.put(key, answer);
+            return answer;*/
+
+        // 5. LLM FALLBACK
+        return callLlmChat(userMessage);
     }
 
     private boolean isOnlyChat(String raw) {
@@ -160,6 +187,28 @@ public class AgentService {
 
     private String buildCacheKey(String userMessage) {
         return userMessage.toLowerCase().trim();
+    }
+
+    private String callLlmWithContext(String userMessage, String context) throws Exception {
+
+        String prompt = """
+            Ти си асистент на хотел.
+            Отговаряй само на база предоставения контекст.
+            Ако отговорът не се съдържа в контекста, кажи че нямаш информация.
+
+            Контекст:
+            %s
+
+            Въпрос на клиента:
+            %s
+            """.formatted(context, userMessage);
+
+
+        List<Message> messages = List.of(
+                new Message("system", prompt),
+                new Message("user", userMessage)
+        );
+        return llmClient.complete(messages);
     }
 
     private String callLlm(String userMessage) throws Exception {
