@@ -1,7 +1,7 @@
 package com.hotel.knowledge.service;
 
 import com.hotel.ai.client.GeminiEmbeddingClient;
-import com.hotel.knowledge.model.KnowledgeDocument;
+import com.hotel.hotelinfo.model.KnowledgeDocument;
 import com.hotel.knowledge.repository.KnowledgeRepository;
 import org.springframework.stereotype.Service;
 

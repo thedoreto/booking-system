@@ -10,7 +10,7 @@ import com.hotel.ai.presentation.ResponseRenderer;
 import com.hotel.ai.tool.Tool;
 import com.hotel.ai.tool.ToolResult;
 import com.hotel.common.util.ValidationUtil;
-import com.hotel.knowledge.model.KnowledgeDocument;
+import com.hotel.hotelinfo.model.KnowledgeDocument;
 import com.hotel.knowledge.service.KnowledgeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

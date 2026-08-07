@@ -21,8 +21,7 @@ import java.util.Optional;
 @RestController
 public class BookingController {
 
-    @Autowired
-    private HotelService hotelService;
+    private final HotelService hotelService;
 
     public BookingController(HotelService hotelService) {
         this.hotelService = hotelService;
