@@ -1,5 +1,6 @@
 package com.hotel.ai.client;
 
+import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -14,11 +15,17 @@ import java.util.regex.Pattern;
 
 @Service
 public class GeminiEmbeddingClient  {
-    @Value("${gemini.api.key}")
-    private String API_KEY;
+    private final String apiKey;
+    private final String url;
 
-    private static final String MODEL = "gemini-embedding-001";
-    private static final String URL = "https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":embedContent?key=";
+
+    public GeminiEmbeddingClient(@Value("${gemini.api.key}") String apiKey,
+                        @Value("${gemini.api.base-url}") String baseUrl,
+                        @Value("${gemini.embedding.model}") String model,
+                        OkHttpClient client) {
+        this.apiKey = apiKey;
+        this.url = baseUrl + "/" + model + ":embedContent?key=";
+    }
 
     public List<Double> getEmbedding(String text) throws Exception {
         // Почистваме текста от кавички и нови редове, за да не счупим JSON-а
@@ -29,7 +36,7 @@ public class GeminiEmbeddingClient  {
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(URL + API_KEY))
+                .uri(URI.create(url + apiKey))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                 .build();

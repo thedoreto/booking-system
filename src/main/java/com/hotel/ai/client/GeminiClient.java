@@ -21,14 +21,16 @@ public class GeminiClient {
     private final OkHttpClient client;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${gemini.api.key}")
-    private String apiKey;
+    private final String apiKey;
+    private final String url;
 
-    // Използваме стабилния стандартен модел
-    private static final String MODEL = "gemini-3.6-flash";
-    private static final String URL_TEMPLATE = "https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent?key=";
 
-    public GeminiClient(OkHttpClient client) {
+    public GeminiClient(@Value("${gemini.api.key}") String apiKey,
+                        @Value("${gemini.api.base-url}") String baseUrl,
+                        @Value("${gemini.base.model}") String model,
+                        OkHttpClient client) {
+        this.apiKey = apiKey;
+        this.url = baseUrl + "/" + model + ":generateContent?key=";
         this.client = client;
     }
 
@@ -42,7 +44,7 @@ public class GeminiClient {
         String body = buildRequest(messages, tools);
 
         Request request = new Request.Builder()
-                .url(URL_TEMPLATE + apiKey)
+                .url(url + apiKey)
                 .addHeader("Content-Type", "application/json")
                 .post(RequestBody.create(body, MediaType.parse("application/json")))
                 .build();
@@ -94,5 +96,9 @@ public class GeminiClient {
         }
 
         return objectMapper.writeValueAsString(root);
+    }
+
+    public String getUrl() {
+        return url + apiKey;
     }
 }
