@@ -40,6 +40,40 @@ public class AgentService {
     private final String chatSystemPrompt = """
             You are a helpful and concise hotel assistant. Stay on user intent.
             """;
+    /**
+     * Списък с предварително дефинираните тулове и техните описания,
+     * кеширани като константа за избягване на излишно заделяне на памет.
+     */
+    private static final List<Map<String, Object>> GEMINI_TOOL_DECLARATIONS = List.of(
+            Map.of(
+                    "name", "get_reservations",
+                    "description", "Връща активните резервации на потребителя. Използвай само за лични резервации."
+            ),
+            Map.of(
+                    "name", "get_rooms",
+                    "description", "Връща списък с всички налични стаи в хотела. НЕ използвай този тул за въпроси относно общи удобства, басейн, спа, ресторанти или обща информация за хотела."
+            ),
+            Map.of(
+                    "name", "get_rooms_per_dates",
+                    "description", "Връща свободни стаи за определен период от време (дати)."
+            )
+    );
+
+    /**
+     * Железният системен промпт за RAG режим — строг, отговорен и обучен да не си измисля факти,
+     * а да се придържа само към предоставения хотелски контекст!
+     */
+    private static final String RAG_SYSTEM_PROMPT_TEMPLATE = """
+        Ти си асистент на хотел.
+        Отговаряй само на база предоставения контекст.
+        Ако отговорът не се съдържа в контекста, кажи че нямаш информация.
+
+        Контекст:
+        %s
+
+        Въпрос на клиента:
+        %s
+        """;
 
     public AgentService(GeminiClient geminiClient,
                         ToolRegistry toolRegistry,
@@ -59,14 +93,34 @@ public class AgentService {
         Object cached = cache.get(key);
         if (cached != null) return cached;
 
-        // 2. LOCAL ROUTE (за приветствия и кратки реплики)
+        // 2. LOCAL ROUTE
+        Object localResult = processLocalRoute(userMessage, key);
+        if (localResult != null) return localResult;
+
+        // 3. RAG (Векторна база)
+        Object ragResult = processRagKnowledge(userMessage, key);
+        if (ragResult != null) return ragResult;
+
+        // 4. TOOL CALLING & SAFETY FALLBACKS
+        Object toolResult = processToolExecution(userMessage, key);
+        if (toolResult != null) return toolResult;
+
+        // 5 & 6. TEXT FALLBACK & CHAT
+        return processTextFallback(userMessage, key);
+    }
+
+// ==================== ПОМОЩНИ СТЪПКИ (PIPELINE METHODS) ====================
+
+    private Object processLocalRoute(String userMessage, String key) {
         String local = localRoute(userMessage);
         if (local != null) {
             cache.put(key, local);
             return local;
         }
+        return null;
+    }
 
-        // 3. ПЪРВО ПРОВЕРЯВАМЕ ВЕКТОРНАТА БАЗА (RAG) - само за общи въпроси
+    private Object processRagKnowledge(String userMessage, String key) throws Exception {
         List<KnowledgeDocument> knowledge = knowledgeService.findRelevant(userMessage);
         if (!knowledge.isEmpty() && !isReservationOrRoomQuery(userMessage)) {
             String context = knowledge.stream()
@@ -77,20 +131,19 @@ public class AgentService {
             cache.put(key, answer);
             return answer;
         }
+        return null;
+    }
 
-        // 4. ДЕКЛАРИРАМЕ ТУЛОВЕТЕ И ПИТАМЕ GEMINI С FUNCTION CALLING
+    private Object processToolExecution(String userMessage, String key) throws Exception {
         List<Map<String, Object>> registeredTools = getGeminiToolDeclarations();
-
-        List<Message> inputMessages = new ArrayList<>();
-        inputMessages.add(new Message("user", userMessage));
+        List<Message> inputMessages = List.of(new Message("user", userMessage));
 
         String rawResponse = geminiClient.completeWithTools(inputMessages, registeredTools);
         JsonNode responseNode = objectMapper.readTree(rawResponse);
 
-        // Проверяваме дали Gemini е решил да извика тул
         String toolName = extractFunctionCallName(responseNode);
 
-        // Защитен механизъм: ако клиентът пита за резервации или стаи, а моделът върне текстов отговор вместо тул
+        // Защитен механизъм за туловете
         if (toolName == null) {
             String lower = userMessage.toLowerCase();
             if (lower.contains("резервац") || lower.contains("reservation")) {
@@ -110,47 +163,53 @@ public class AgentService {
             return result;
         }
 
-        // 5. ТЕКСТОВ ФОЛБЕК
+        return null;
+    }
+
+    private Object processTextFallback(String userMessage, String key) throws Exception {
+        List<Map<String, Object>> registeredTools = getGeminiToolDeclarations();
+        List<Message> inputMessages = List.of(new Message("user", userMessage));
+
+        // Можем да си спестим повторно извикване, ако вече имаме rawResponse,
+        // но тук го пазим максимално близко до оригиналната ти логика:
+        String rawResponse = geminiClient.completeWithTools(inputMessages, registeredTools);
+        JsonNode responseNode = objectMapper.readTree(rawResponse);
+
         String textReply = extractTextReply(responseNode);
         if (textReply != null && !textReply.isBlank()) {
             cache.put(key, textReply);
             return textReply;
         }
 
-        // 6. Краен LLM чат резервен вариант
         String fallbackAnswer = callLlmChat(userMessage);
         cache.put(key, fallbackAnswer);
         return fallbackAnswer;
     }
 
+    /**
+     * Извлича последното съобщение на потребителя от чат историята.
+     */
     private String extractUserMessage(List<Message> messages) {
         return messages.get(messages.size() - 1).getContent();
     }
 
+    /**
+     * Генерира стандартизиран ключ за кеширане спрямо съобщението (в малки букви и без излишни интервали).
+     */
     private String buildCacheKey(String userMessage) {
         return userMessage.toLowerCase().trim();
     }
 
     /**
-     * Декларираме туловете в официалния формат на Gemini API.
+     * Декларира наличните тулове и техните описания в официалния формат на Gemini API.
      */
     private List<Map<String, Object>> getGeminiToolDeclarations() {
-        return List.of(
-                Map.of(
-                        "name", "get_reservations",
-                        "description", "Връща активните резервации на потребителя. Използвай само за лични резервации."
-                ),
-                Map.of(
-                        "name", "get_rooms",
-                        "description", "Връща списък с всички налични стаи в хотела. НЕ използвай този тул за въпроси относно общи удобства, басейн, спа, ресторанти или обща информация за хотела."
-                ),
-                Map.of(
-                        "name", "get_rooms_per_dates",
-                        "description", "Връща свободни стаи за определен период от време (дати)."
-                )
-        );
+        return GEMINI_TOOL_DECLARATIONS;
     }
 
+    /**
+     * Обхожда JSON дървото от отговора на Gemini и извлича името на функцията/тула за изпълнение, ако има такъв.
+     */
     private String extractFunctionCallName(JsonNode root) {
         try {
             JsonNode candidates = root.path("candidates");
@@ -169,7 +228,9 @@ public class AgentService {
         }
         return null;
     }
-
+    /**
+     * Обхожда JSON дървото от отговора на Gemini и извлича текстовия отговор, върнат от модела.
+     */
     private String extractTextReply(JsonNode root) {
         try {
             JsonNode candidates = root.path("candidates");
@@ -205,6 +266,9 @@ public class AgentService {
         return rawJson; // fallback, ако случайно не успее да го парсира
     }
 
+    /**
+     * Проверява дали потребителското съобщение е свързано с резервации или стаи (използва се за защитни механизми).
+     */
     private boolean isReservationOrRoomQuery(String message) {
         String m = message.toLowerCase();
         return m.contains("резервац") || m.contains("reservation") ||
@@ -212,18 +276,11 @@ public class AgentService {
                 m.contains("свободни") || m.contains("цена");
     }
 
+    /**
+     * Извиква LLM модела, като му подава динамично намерен RAG контекст и ограничава отговорите в рамките на този контекст.
+     */
     private String callLlmWithContext(String userMessage, String context)  {
-        String prompt = """
-            Ти си асистент на хотел.
-            Отговаряй само на база предоставения контекст.
-            Ако отговорът не се съдържа в контекста, кажи че нямаш информация.
-
-            Контекст:
-            %s
-
-            Въпрос на клиента:
-            %s
-            """.formatted(context, userMessage);
+        String prompt = RAG_SYSTEM_PROMPT_TEMPLATE.formatted(context, userMessage);
 
         List<Message> messages = List.of(
                 new Message("system", prompt),
@@ -237,6 +294,9 @@ public class AgentService {
         }
     }
 
+    /**
+     * Извиква общия чат на LLM модела със стандартния системен промпт.
+     */
     private String callLlmChat(String userMessage) throws Exception {
         List<Message> messages = List.of(
                 new Message("system", chatSystemPrompt),
@@ -246,6 +306,9 @@ public class AgentService {
         return parseTextFromRawJson(rawResponse); // Връщаме изчистен текст, а не суров JSON!
     }
 
+    /**
+     * Намира и изпълнява съответния тул (инструмент) на база името му, като подготвя необходимия контекст и валидации.
+     */
     private Object executeTool(String toolName, String userMessage) {
         log.info("Executing tool: " + toolName + " with message: " + userMessage);
         Tool tool = toolRegistry.find(toolName);
@@ -267,6 +330,9 @@ public class AgentService {
         return responseRenderer.render(toolName, result);
     }
 
+    /**
+     * Локален рутер за бързо обработване на приветствия, кратки реплики и общи въпроси без нужда от заявки към LLM.
+     */
     private String localRoute(String message) {
         String m = message.toLowerCase().trim();
 
@@ -291,6 +357,10 @@ public class AgentService {
         return null;
     }
 
+    /**
+     * Обработва изключения при заявки към Gemini API, като прави проверка за изчерпани лимити (код 429)
+     * и връща подходящо съобщение към потребителя, или логва грешката при друг тип проблем.
+     */
     private Object handleGeminiException(Exception e, String defaultMessage) {
         String msg = e.getMessage() != null ? e.getMessage() : "";
         if (msg.contains("429") || msg.contains("RESOURCE_EXHAUSTED") || msg.contains("quota")) {
