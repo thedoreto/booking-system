@@ -9,5 +9,5 @@ import java.util.Optional;
 @Repository
 public interface HotelInfoRepository extends MongoRepository<KnowledgeDocument, String> {
 
-    Optional<KnowledgeDocument> findByName(String name);
+  //  Optional<KnowledgeDocument> findByName(String name);
 }
