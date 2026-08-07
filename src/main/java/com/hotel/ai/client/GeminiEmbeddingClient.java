@@ -1,6 +1,5 @@
 package com.hotel.ai.client;
 
-import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -21,8 +20,7 @@ public class GeminiEmbeddingClient  {
 
     public GeminiEmbeddingClient(@Value("${gemini.api.key}") String apiKey,
                         @Value("${gemini.api.base-url}") String baseUrl,
-                        @Value("${gemini.embedding.model}") String model,
-                        OkHttpClient client) {
+                        @Value("${gemini.embedding.model}") String model) {
         this.apiKey = apiKey;
         this.url = baseUrl + "/" + model + ":embedContent?key=";
     }
