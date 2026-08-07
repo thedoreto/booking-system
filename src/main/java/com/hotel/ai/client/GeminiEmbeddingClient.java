@@ -28,8 +28,6 @@ public class GeminiEmbeddingClient  {
         String requestBody = String.format("{\"content\":{\"parts\":[{\"text\":\"%s\"}]}}", sanitizedText);
 
         HttpClient client = HttpClient.newHttpClient();
-        System.out.println("Api key: " + API_KEY);
-        System.out.println("Api key: " + API_KEY);
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(URL + API_KEY))
                 .header("Content-Type", "application/json")

@@ -2,13 +2,11 @@ package com.hotel.ai.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.hotel.ai.client.LlmClient;
+import com.hotel.ai.client.GeminiClient;
 import com.hotel.ai.context.ToolContext;
 import com.hotel.ai.dto.DateRange;
 import com.hotel.ai.dto.Message;
 import com.hotel.ai.presentation.ResponseRenderer;
-import com.hotel.ai.tool.ReservationsTool;
 import com.hotel.ai.tool.Tool;
 import com.hotel.ai.tool.ToolResult;
 import com.hotel.common.util.ValidationUtil;
@@ -19,8 +17,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -28,8 +26,8 @@ import java.util.stream.Collectors;
 @Service
 public class AgentService {
 
-    private final LlmClient llmClient;
-    private KnowledgeService knowledgeService;
+    private final GeminiClient geminiClient;
+    private final KnowledgeService knowledgeService;
     private final ToolRegistry toolRegistry;
     private final ResponseRenderer responseRenderer;
 
@@ -38,67 +36,22 @@ public class AgentService {
 
     private static final Logger log = LoggerFactory.getLogger(AgentService.class);
 
-    private final String system = """
-            Return ONLY one JSON object.
-            
-            Format:
-            {"type":"tool","tool":"<name>","arguments":{}}
-            or
-            {"type":"none"}
-            
-            Tools:
-            - get_reservations
-            - get_rooms
-            - get_rooms_per_dates
-            - strawberry_muffin
-            
-            SPECIAL RULE:
-            If user asks for a cooking recipe, ingredients, or cooking instructions,
-            return:
-            {"type":"tool","tool":"strawberry_muffin","arguments":{}}
-            
-            Do NOT use this tool for hotel information about meals,
-            breakfast hours, restaurant opening times, or food availability.
-            Those questions should use the knowledge base.
-            
-            Rules:
-            - get_reservations:
-              ALWAYS use TOOL (no parameters required)
-            - get_rooms:
-              ALWAYS use TOOL (no parameters required)
-            - get_rooms_per_dates:
-              Use TOOL only if dates are present.
-              If dates are missing → CHAT asking for dates.
-              
-              If no tool applies:
-              Return {"type":"none"}
-              DO NOT ask questions or explain anything.
-            
-            - Never guess missing parameters.
-            """;
-
+    // Кратък и чист системен промпт само за поведението на чата
     private final String chatSystemPrompt = """
-            You are a conversational assistant.
-            
-            Rules:
-            - No explanations about internal processing
-            - No mention of tools, models, or systems
-            - Be direct and concise
-            - Stay on user intent only
+            You are a helpful and concise hotel assistant. Stay on user intent.
             """;
 
-    public AgentService(LlmClient llmClient,
+    public AgentService(GeminiClient geminiClient,
                         ToolRegistry toolRegistry,
                         ResponseRenderer responseRenderer,
                         KnowledgeService knowledgeService) {
-        this.llmClient = llmClient;
+        this.geminiClient = geminiClient;
         this.toolRegistry = toolRegistry;
         this.responseRenderer = responseRenderer;
         this.knowledgeService = knowledgeService;
     }
 
     public Object handle(List<Message> messages) throws Exception {
-
         String userMessage = extractUserMessage(messages);
         String key = buildCacheKey(userMessage);
 
@@ -106,81 +59,70 @@ public class AgentService {
         Object cached = cache.get(key);
         if (cached != null) return cached;
 
-        // 2. LOCAL ROUTE
+        // 2. LOCAL ROUTE (за приветствия и кратки реплики)
         String local = localRoute(userMessage);
         if (local != null) {
             cache.put(key, local);
             return local;
         }
 
-        // 3. CALL TOOL
-        String raw = callLlm(userMessage);
-        if (!isOnlyChat(raw)) {
-            JsonNode node = parseLlm(raw);
+        // 3. ПЪРВО ПРОВЕРЯВАМЕ ВЕКТОРНАТА БАЗА (RAG) - само за общи въпроси
+        List<KnowledgeDocument> knowledge = knowledgeService.findRelevant(userMessage);
+        if (!knowledge.isEmpty() && !isReservationOrRoomQuery(userMessage)) {
+            String context = knowledge.stream()
+                    .map(KnowledgeDocument::getText)
+                    .collect(Collectors.joining("\n"));
 
-            Object result = resolveLlm(node, userMessage);
-            if (shouldCache(node, result)) {
+            String answer = callLlmWithContext(userMessage, context);
+            cache.put(key, answer);
+            return answer;
+        }
+
+        // 4. ДЕКЛАРИРАМЕ ТУЛОВЕТЕ И ПИТАМЕ GEMINI С FUNCTION CALLING
+        List<Map<String, Object>> registeredTools = getGeminiToolDeclarations();
+
+        List<Message> inputMessages = new ArrayList<>();
+        inputMessages.add(new Message("user", userMessage));
+
+        String rawResponse = geminiClient.completeWithTools(inputMessages, registeredTools);
+        JsonNode responseNode = objectMapper.readTree(rawResponse);
+
+        // Проверяваме дали Gemini е решил да извика тул
+        String toolName = extractFunctionCallName(responseNode);
+
+        // Защитен механизъм: ако клиентът пита за резервации или стаи, а моделът върне текстов отговор вместо тул
+        if (toolName == null) {
+            String lower = userMessage.toLowerCase();
+            if (lower.contains("резервац") || lower.contains("reservation")) {
+                toolName = "get_reservations";
+            } else if (lower.contains("стаи") || lower.contains("rooms") || lower.contains("свободни") || lower.contains("цена")) {
+                toolName = "get_rooms";
+            }
+        }
+
+        if (toolName != null) {
+            Object result = executeTool(toolName, userMessage);
+
+            Tool tool = toolRegistry.find(toolName);
+            if (tool != null && tool.isToolCachable()) {
                 cache.put(key, result);
             }
             return result;
         }
 
-        // 4. VECTOR SEARCH
-        List<KnowledgeDocument> knowledge =
-                knowledgeService.findRelevant(userMessage);
-        if (!knowledge.isEmpty()) {
-            String context = knowledge.stream()
-                    .map(KnowledgeDocument::getText)
-                    .collect(Collectors.joining("\n"));
-
-            return callLlmWithContext(userMessage, context);
-        }
-        /* String answer = knowledge.get(0).getText();
-            cache.put(key, answer);
-            return answer;*/
-
-        // 5. LLM FALLBACK
-        return callLlmChat(userMessage);
-    }
-
-    private boolean isOnlyChat(String raw) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode node = mapper.readTree(raw);
-            return "none".equals(node.path("type").asText());
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private Object resolveLlm(JsonNode node, String userMessage) {
-
-        String type = node.path("type").asText("chat");
-
-        if (!"tool".equals(type)) {
-            return node.path("content").asText();
+        // 5. ТЕКСТОВ ФОЛБЕК
+        String textReply = extractTextReply(responseNode);
+        if (textReply != null && !textReply.isBlank()) {
+            cache.put(key, textReply);
+            return textReply;
         }
 
-        String toolName = node.path("tool").asText();
-        return executeTool(toolName, userMessage);
+        // 6. Краен LLM чат резервен вариант
+        String fallbackAnswer = callLlmChat(userMessage);
+        cache.put(key, fallbackAnswer);
+        return fallbackAnswer;
     }
 
-    private boolean shouldCache(JsonNode node, Object result) {
-
-        String type = node.path("type").asText("chat");
-
-        // chat винаги кешираш
-        if (!"tool".equals(type)) {
-            return true;
-        }
-
-        String toolName = node.path("tool").asText();
-        Tool tool = toolRegistry.find(toolName);
-
-        if (tool == null) return false;
-        String reqId = UUID.randomUUID().toString();
-        return tool.isToolCachable();
-    }
     private String extractUserMessage(List<Message> messages) {
         return messages.get(messages.size() - 1).getContent();
     }
@@ -189,8 +131,88 @@ public class AgentService {
         return userMessage.toLowerCase().trim();
     }
 
-    private String callLlmWithContext(String userMessage, String context) throws Exception {
+    /**
+     * Декларираме туловете в официалния формат на Gemini API.
+     */
+    private List<Map<String, Object>> getGeminiToolDeclarations() {
+        return List.of(
+                Map.of(
+                        "name", "get_reservations",
+                        "description", "Връща активните резервации на потребителя. Използвай само за лични резервации."
+                ),
+                Map.of(
+                        "name", "get_rooms",
+                        "description", "Връща списък с всички налични стаи в хотела. НЕ използвай този тул за въпроси относно общи удобства, басейн, спа, ресторанти или обща информация за хотела."
+                ),
+                Map.of(
+                        "name", "get_rooms_per_dates",
+                        "description", "Връща свободни стаи за определен период от време (дати)."
+                )
+        );
+    }
 
+    private String extractFunctionCallName(JsonNode root) {
+        try {
+            JsonNode candidates = root.path("candidates");
+            if (candidates.isArray() && !candidates.isEmpty()) {
+                JsonNode parts = candidates.get(0).path("content").path("parts");
+                if (parts.isArray()) {
+                    for (JsonNode part : parts) {
+                        if (part.has("functionCall")) {
+                            return part.path("functionCall").path("name").asText();
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to extract function call name", e);
+        }
+        return null;
+    }
+
+    private String extractTextReply(JsonNode root) {
+        try {
+            JsonNode candidates = root.path("candidates");
+            if (candidates.isArray() && !candidates.isEmpty()) {
+                JsonNode parts = candidates.get(0).path("content").path("parts");
+                if (parts.isArray()) {
+                    for (JsonNode part : parts) {
+                        if (part.has("text") && !part.path("text").asText().isBlank()) {
+                            return part.path("text").asText();
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to extract text reply", e);
+        }
+        return null;
+    }
+
+    /**
+     * Помощен метод, който приема суров JSON стринг от Gemini и извлича от него единствено текстовия отговор.
+     */
+    private String parseTextFromRawJson(String rawJson) {
+        try {
+            JsonNode root = objectMapper.readTree(rawJson);
+            String text = extractTextReply(root);
+            if (text != null) {
+                return text;
+            }
+        } catch (Exception e) {
+            log.error("Failed to parse raw JSON response from Gemini", e);
+        }
+        return rawJson; // fallback, ако случайно не успее да го парсира
+    }
+
+    private boolean isReservationOrRoomQuery(String message) {
+        String m = message.toLowerCase();
+        return m.contains("резервац") || m.contains("reservation") ||
+                m.contains("стаи") || m.contains("rooms") ||
+                m.contains("свободни") || m.contains("цена");
+    }
+
+    private String callLlmWithContext(String userMessage, String context)  {
         String prompt = """
             Ти си асистент на хотел.
             Отговаряй само на база предоставения контекст.
@@ -203,67 +225,25 @@ public class AgentService {
             %s
             """.formatted(context, userMessage);
 
-
         List<Message> messages = List.of(
                 new Message("system", prompt),
                 new Message("user", userMessage)
         );
-        return llmClient.complete(messages);
-    }
-
-    private String callLlm(String userMessage) throws Exception {
-
-        List<Message> input = new ArrayList<>();
-        input.add(new Message("system", system));
-        input.add(new Message("user", userMessage));
-
         try {
-            return llmClient.complete(input);
-
-        } catch (HttpClientErrorException.TooManyRequests e) {
-            Thread.sleep(6000 + new Random().nextInt(2000));
-            return llmClient.complete(input);
+            String rawResponse = geminiClient.complete(messages);
+            return parseTextFromRawJson(rawResponse); // Връщаме изчистен текст, а не суров JSON!
+        } catch (IOException ioe) {
+            return (String) handleGeminiException(ioe, "В момента не мога да обработя заявката ви.");
         }
     }
 
     private String callLlmChat(String userMessage) throws Exception {
-
-        List<Message> input = new ArrayList<>();
-        input.add(new Message("system", chatSystemPrompt));
-        input.add(new Message("user", userMessage));
-
-        try {
-            return llmClient.complete(input);
-
-        } catch (HttpClientErrorException.TooManyRequests e) {
-            Thread.sleep(6000 + new Random().nextInt(2000));
-            return llmClient.complete(input);
-        }
-    }
-
-    private JsonNode parseLlm(String raw) {
-
-        String cleaned = raw
-                .replace("```json", "")
-                .replace("```", "")
-                .trim();
-
-        if (!cleaned.startsWith("{")) {
-            return fallback(cleaned);
-        }
-
-        try {
-            return objectMapper.readTree(cleaned);
-        } catch (Exception e) {
-            return fallback(cleaned);
-        }
-    }
-
-    private JsonNode fallback(String text) {
-        ObjectNode node = objectMapper.createObjectNode();
-        node.put("type", "chat");
-        node.put("content", text);
-        return node;
+        List<Message> messages = List.of(
+                new Message("system", chatSystemPrompt),
+                new Message("user", userMessage)
+        );
+        String rawResponse = geminiClient.complete(messages);
+        return parseTextFromRawJson(rawResponse); // Връщаме изчистен текст, а не суров JSON!
     }
 
     private Object executeTool(String toolName, String userMessage) {
@@ -277,7 +257,7 @@ public class AgentService {
         if ("get_rooms_per_dates".equals(toolName)) {
             DateRange range = ValidationUtil.extractDateRange(userMessage);
             if (range == null) {
-                return "Моля въведете вадни дати";
+                return "Моля въведете валидни дати";
             }
             ctx = new ToolContext(auth, userMessage, range);
         } else {
@@ -288,12 +268,11 @@ public class AgentService {
     }
 
     private String localRoute(String message) {
-
         String m = message.toLowerCase().trim();
 
         if (m.equals("hi") || m.equals("hello") || m.equals("hey") || m.equals("eho")
-                    || m.equals("здравей") || m.equals("здрасти") || m.equals("привет")
-                    || m.equals("ехо")) {
+                || m.equals("здравей") || m.equals("здрасти") || m.equals("привет")
+                || m.equals("ехо")) {
             return "Здрасти. Мога да помагам с резервации и стаи.";
         }
 
@@ -312,6 +291,13 @@ public class AgentService {
         return null;
     }
 
-
-
+    private Object handleGeminiException(Exception e, String defaultMessage) {
+        String msg = e.getMessage() != null ? e.getMessage() : "";
+        if (msg.contains("429") || msg.contains("RESOURCE_EXHAUSTED") || msg.contains("quota")) {
+            log.warn("Gemini API quota exceeded: {}", msg);
+            return "Днес изчерпихме безплатните заявки към AI асистента. Моля, опитайте отново утре!";
+        }
+        log.error("Gemini API error occurred", e);
+        return defaultMessage;
+    }
 }
