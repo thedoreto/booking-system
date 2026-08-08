@@ -1,13 +1,11 @@
 package com.hotel.hotelinfo.repository;
 
-import com.hotel.hotelinfo.model.KnowledgeDocument;
+import com.hotel.hotelinfo.model.HotelInfo;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-
 @Repository
-public interface HotelInfoRepository extends MongoRepository<KnowledgeDocument, String> {
+public interface HotelInfoRepository extends MongoRepository<HotelInfo, String> {
 
   //  Optional<KnowledgeDocument> findByName(String name);
 }

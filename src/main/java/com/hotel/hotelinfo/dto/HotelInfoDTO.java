@@ -2,34 +2,93 @@ package com.hotel.hotelinfo.dto;
 
 import java.util.List;
 
+// Presentation for main page - coming from knowledge AND hotelinfo collections
 public class HotelInfoDTO {
 
-    private String title;
-    private String text;
-    private String category;
-    private List<String> tags;
-    private String source;
+    // From knowledge
+    private List<KnowledgeDTO> knowledge;
+
+    // From hotel_info
+    private String name;
+    private String description;
+    private String address;
+    private String phone;
+    private String email;
+    private List<String> imageIds;
 
     public HotelInfoDTO() {
     }
 
-    public HotelInfoDTO(String title, String text, String category,
-                        List<String> tags, String source) {
-        this.title = title;
-        this.text = text;
-        this.category = category;
-        this.tags = tags;
-        this.source = source;
+    public HotelInfoDTO(List<KnowledgeDTO> knowledge,
+                        String name,
+                        String description,
+                        String address,
+                        String phone,
+                        String email,
+                        List<String> imageIds) {
+
+        this.knowledge = knowledge;
+        this.name = name;
+        this.description = description;
+        this.address = address;
+        this.phone = phone;
+        this.email = email;
+        this.imageIds = imageIds;
     }
 
-    public String getTitle() { return title; }
-    public String getText() { return text; }
-    public String getCategory() { return category; }
-    public List<String> getTags() { return tags; }
-    public String getSource() { return source; }
-    public void setTitle(String title) { this.title = title; }
-    public void setText(String text) { this.text = text; }
-    public void setCategory(String category) { this.category = category; }
-    public void setTags(List<String> tags) { this.tags = tags; }
-    public void setSource(String source) { this.source = source; }
+    public List<KnowledgeDTO> getKnowledge() {
+        return knowledge;
+    }
+
+    public void setKnowledge(List<KnowledgeDTO> knowledge) {
+        this.knowledge = knowledge;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public List<String> getImageIds() {
+        return imageIds;
+    }
+
+    public void setImageIds(List<String> imageIds) {
+        this.imageIds = imageIds;
+    }
 }
