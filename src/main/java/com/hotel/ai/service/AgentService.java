@@ -67,7 +67,8 @@ public class AgentService {
         Ти си асистент на хотел.
         Отговаряй само на база предоставения контекст.
         Ако отговорът не се съдържа в контекста, кажи че нямаш информация.
-
+        **Винаги отговаряй на същия език, на който е зададен въпросът на клиента (например ако въпросът е на английски, отговори на английски).**
+        
         Контекст:
         %s
 
@@ -134,16 +135,21 @@ public class AgentService {
         return null;
     }
 
-    private Object processToolExecution(String userMessage, String key) throws Exception {
+    private Object processToolExecution(String userMessage, String key) {
         List<Map<String, Object>> registeredTools = getGeminiToolDeclarations();
         List<Message> inputMessages = List.of(new Message("user", userMessage));
 
-        String rawResponse = geminiClient.completeWithTools(inputMessages, registeredTools);
-        JsonNode responseNode = objectMapper.readTree(rawResponse);
-
+        // 1. Единствената заявка към Gemini с туловете
+        JsonNode responseNode;
+        try {
+            String rawResponse = geminiClient.completeWithTools(inputMessages, registeredTools);
+            responseNode = objectMapper.readTree(rawResponse);
+        } catch (IOException ioe) {
+            return (String) handleGeminiException(ioe, "В момента не мога да обработя заявката ви.");
+        }
         String toolName = extractFunctionCallName(responseNode);
 
-        // Защитен механизъм за туловете
+        // Защитен механизъм за туловете (ако моделът не го е върнал сам, а го ловим по ключови думи)
         if (toolName == null) {
             String lower = userMessage.toLowerCase();
             if (lower.contains("резервац") || lower.contains("reservation")) {
@@ -154,16 +160,41 @@ public class AgentService {
         }
 
         if (toolName != null) {
-            Object result = executeTool(toolName, userMessage);
+            // Изпълняваме тула
+            Object toolOutput = executeToolRaw(toolName, userMessage);
 
             Tool tool = toolRegistry.find(toolName);
             if (tool != null && tool.isToolCachable()) {
-                cache.put(key, result);
+                cache.put(key, toolOutput);
             }
-            return result;
+            return toolOutput;
         }
 
         return null;
+    }
+
+    /**
+     * Помощен метод, който само изпълнява тула и рендва суровия резултат без да го връща директно на клиента.
+     */
+    private Object executeToolRaw(String toolName, String userMessage) {
+        log.info("Executing tool: " + toolName + " with message: " + userMessage);
+        Tool tool = toolRegistry.find(toolName);
+        if (tool == null) {
+            return "Unknown tool: " + toolName;
+        }
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        ToolContext ctx;
+        if ("get_rooms_per_dates".equals(toolName)) {
+            DateRange range = ValidationUtil.extractDateRange(userMessage);
+            if (range == null) {
+                return "Моля въведете валидни дати";
+            }
+            ctx = new ToolContext(auth, userMessage, range);
+        } else {
+            ctx = new ToolContext(auth, userMessage);
+        }
+        ToolResult result = tool.execute(ctx);
+        return responseRenderer.render(toolName, result);
     }
 
     private Object processTextFallback(String userMessage, String key) throws Exception {
@@ -365,7 +396,7 @@ public class AgentService {
         String msg = e.getMessage() != null ? e.getMessage() : "";
         if (msg.contains("429") || msg.contains("RESOURCE_EXHAUSTED") || msg.contains("quota")) {
             log.warn("Gemini API quota exceeded: {}", msg);
-            return "Днес изчерпихме безплатните заявки към AI асистента. Моля, опитайте отново утре!";
+            return "Изчерпахте безплатните заявки към AI асистента. Моля, опитайте отново по-късно!";
         }
         log.error("Gemini API error occurred", e);
         return defaultMessage;

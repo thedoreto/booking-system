@@ -25,12 +25,18 @@ public class GeminiEmbeddingClient  {
         this.url = baseUrl + "/" + model + ":embedContent?key=";
     }
 
-    public List<Double> getEmbedding(String text) throws Exception {
+    /**
+     * Генерира ембединг с указан taskType (напр. "RETRIEVAL_DOCUMENT" или "RETRIEVAL_QUERY").
+     */
+    public List<Double> getEmbedding(String text, String taskType) throws Exception {
         // Почистваме текста от кавички и нови редове, за да не счупим JSON-а
         String sanitizedText = text.replace("\"", "\\\"").replace("\n", " ");
 
-        // Създаваме JSON съвсем ръчно като обикновен текст
-        String requestBody = String.format("{\"content\":{\"parts\":[{\"text\":\"%s\"}]}}", sanitizedText);
+        // Създаваме JSON заявката, включвайки taskType според изискванията на Gemini API
+        String requestBody = String.format(
+                "{\"content\": {\"parts\": [{\"text\": \"%s\"}]}, \"taskType\": \"%s\"}",
+                sanitizedText, taskType
+        );
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
@@ -47,6 +53,13 @@ public class GeminiEmbeddingClient  {
 
         // Извличаме числата от отговора с бърз Regex (без нужда от тежки библиотеки за парсиране)
         return extractValuesWithRegex(response.body());
+    }
+
+    /**
+     * Помощен метод по подразбиране (третира текса като потребителска заявка за търсене).
+     */
+    public List<Double> getEmbedding(String text) throws Exception {
+        return getEmbedding(text, "RETRIEVAL_QUERY");
     }
 
     private static List<Double> extractValuesWithRegex(String jsonResponse) {

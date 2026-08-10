@@ -21,7 +21,7 @@ public class KnowledgeService {
     }
 
     public List<KnowledgeDocument> findRelevant(String question) throws Exception {
-     //   testKnowledge();
+      //  testKnowledge();
         var embedding = geminiEmbeddingClient.getEmbedding(question);
 
         var result = knowledgeRepo.searchByVector(embedding);
@@ -36,7 +36,7 @@ public class KnowledgeService {
     public void testKnowledge() {
 
         try {
-            List<Double> em = geminiEmbeddingClient.getEmbedding("Напускане на стаите е до 12:00 часа.");
+            List<Double> em = geminiEmbeddingClient.getEmbedding("Хотелът има седем(7) звезди.");
             String vectorString = em.stream()
                     .map(String::valueOf)
                     .collect(Collectors.joining(", "));

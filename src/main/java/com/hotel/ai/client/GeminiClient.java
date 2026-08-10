@@ -5,7 +5,6 @@ import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -35,8 +34,6 @@ public class GeminiClient {
     }
 
     public String complete(List<Message> messages) throws IOException {
-        // Временно връщаме готов JSON за тестове (разкоментирай при нужда)
-       //  return "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"Тестов отговор от локален мок\"}]}}]}";
         return completeWithTools(messages, null);
     }
 
@@ -65,15 +62,35 @@ public class GeminiClient {
     private String buildRequest(List<Message> messages, List<Map<String, Object>> tools) throws IOException {
         Map<String, Object> root = new HashMap<>();
 
-        // 1. Извличаме системното съобщение (ако има такова) и го слагаме където го иска Gemini
         List<Message> chatMessages = new ArrayList<>();
+        StringBuilder systemInstructionBuilder = new StringBuilder();
+
+        // 1. Събираме системните съобщения или задаваме базово, ако няма
         for (Message msg : messages) {
             if ("system".equalsIgnoreCase(msg.getRole())) {
-                root.put("systemInstruction", Map.of("parts", List.of(Map.of("text", msg.getContent()))));
+                if (systemInstructionBuilder.length() > 0) {
+                    systemInstructionBuilder.append("\n");
+                }
+                systemInstructionBuilder.append(msg.getContent());
             } else {
                 chatMessages.add(msg);
             }
         }
+
+        // Автоматично добавяме желязно правило за езика, включващо туловете и базата
+        String languageRule = "ВАЖНО: Независимо на какъв език е върнат отговорът от инструмента (tool) или базата данни, " +
+                "ТИ ЗАДЪЛЖИТЕЛНО превеждай и отговаряй на същия език, на който е зададен въпросът на клиента " +
+                "(ако пита на английски - отговори на английски, ако пита на български - на български).";
+
+        if (systemInstructionBuilder.length() > 0) {
+            if (!systemInstructionBuilder.toString().contains("език")) {
+                systemInstructionBuilder.append("\n").append(languageRule);
+            }
+        } else {
+            systemInstructionBuilder.append("Ти си полезен асистент на хотел. ").append(languageRule);
+        }
+
+        root.put("systemInstruction", Map.of("parts", List.of(Map.of("text", systemInstructionBuilder.toString()))));
 
         // 2. Преобразуваме останалите съобщения в Gemini формат (contents -> parts)
         List<Map<String, Object>> contents = chatMessages.stream().map(msg -> {

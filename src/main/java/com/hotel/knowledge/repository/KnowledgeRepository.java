@@ -19,7 +19,7 @@ public interface KnowledgeRepository
                 "path": "embedding",
                 "queryVector": ?0,
                 "numCandidates": 100,
-                "limit": 1
+                "limit": 5
               }
             }
             """
