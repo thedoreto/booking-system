@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api-old")
 public class ChatController {
 
     private final AgentService agentService;
@@ -20,7 +20,7 @@ public class ChatController {
         this.agentService = agentService;
     }
 
-    @PostMapping("/chat")
+    @PostMapping("/chat-old")
     public ChatResponse chat(@RequestBody ChatRequest request) throws Exception {
         Object reply = agentService.handle(request.getMessages());
         return new ChatResponse(reply);
