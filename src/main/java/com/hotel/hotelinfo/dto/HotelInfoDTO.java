@@ -2,13 +2,9 @@ package com.hotel.hotelinfo.dto;
 
 import java.util.List;
 
-// Presentation for main page - coming from knowledge AND hotelinfo collections
+// Presentation for main page - coming from hotel_info collection
 public class HotelInfoDTO {
 
-    // From knowledge
-    private List<KnowledgeDTO> knowledge;
-
-    // From hotel_info
     private String name;
     private String description;
     private String address;
@@ -19,29 +15,18 @@ public class HotelInfoDTO {
     public HotelInfoDTO() {
     }
 
-    public HotelInfoDTO(List<KnowledgeDTO> knowledge,
-                        String name,
+    public HotelInfoDTO(String name,
                         String description,
                         String address,
                         String phone,
                         String email,
                         List<String> imageIds) {
-
-        this.knowledge = knowledge;
         this.name = name;
         this.description = description;
         this.address = address;
         this.phone = phone;
         this.email = email;
         this.imageIds = imageIds;
-    }
-
-    public List<KnowledgeDTO> getKnowledge() {
-        return knowledge;
-    }
-
-    public void setKnowledge(List<KnowledgeDTO> knowledge) {
-        this.knowledge = knowledge;
     }
 
     public String getName() {

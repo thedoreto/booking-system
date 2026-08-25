@@ -6,7 +6,11 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-
+/**
+ * @deprecated This client is part of the legacy AI implementation.
+ *             The new AI implementation uses LangChain4j.
+ */
+@Deprecated
 @Repository
 public interface KnowledgeRepository
         extends MongoRepository<KnowledgeDocument, String> {
