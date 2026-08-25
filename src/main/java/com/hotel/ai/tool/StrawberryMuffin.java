@@ -3,6 +3,11 @@ package com.hotel.ai.tool;
 import com.hotel.ai.context.ToolContext;
 import org.springframework.stereotype.Component;
 
+/**
+ * @deprecated This client is part of the legacy AI implementation.
+ *             The new AI implementation uses LangChain4j.
+ */
+@Deprecated
 @Component
 public class StrawberryMuffin implements Tool{
 

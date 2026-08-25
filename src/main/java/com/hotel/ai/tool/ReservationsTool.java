@@ -9,6 +9,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * @deprecated This client is part of the legacy AI implementation.
+ *             The new AI implementation uses LangChain4j.
+ */
+@Deprecated
 @Component
 public class ReservationsTool implements Tool {
 

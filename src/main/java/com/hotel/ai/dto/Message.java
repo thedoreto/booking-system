@@ -3,6 +3,11 @@ package com.hotel.ai.dto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * @deprecated Part of the legacy AI implementation.
+ *             The new AI implementation uses LangChain4j.
+ */
+@Deprecated
 public class Message {
     private String role;
     private String content;

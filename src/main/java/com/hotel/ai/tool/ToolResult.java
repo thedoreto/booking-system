@@ -1,4 +1,10 @@
 package com.hotel.ai.tool;
+
+/**
+ * @deprecated This client is part of the legacy AI implementation.
+ *             The new AI implementation uses LangChain4j.
+ */
+@Deprecated
 public class ToolResult {
 
     private String type;

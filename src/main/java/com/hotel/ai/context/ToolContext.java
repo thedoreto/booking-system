@@ -3,6 +3,11 @@ package com.hotel.ai.context;
 import com.hotel.ai.dto.DateRange;
 import org.springframework.security.core.Authentication;
 
+/**
+ * @deprecated Part of the legacy AI implementation.
+ *             The new AI implementation uses LangChain4j.
+ */
+@Deprecated
 public class ToolContext {
     private Authentication auth;
     private String rawUserMessage;

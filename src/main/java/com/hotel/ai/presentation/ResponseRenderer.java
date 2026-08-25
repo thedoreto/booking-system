@@ -8,6 +8,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * @deprecated Part of the legacy AI implementation.
+ *             The new AI implementation uses LangChain4j.
+ */
+@Deprecated
 @Component
 public class ResponseRenderer {
 
