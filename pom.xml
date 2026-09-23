@@ -76,6 +76,12 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Модул за управление на кафка -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>

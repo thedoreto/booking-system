@@ -99,9 +99,19 @@ public List<BookingDTO> createBooking(List<BookingDTO> bookingDTOS) {
         return convertBookingToDTO(booking);
     }
 
+    public List<BookingDTO> getBookingByUserId(String userId) {
+        List<Booking> bookings = bookingRepo.findByUserId(userId);
+        if (bookings == null || bookings.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No bookings found for user");
+        }
+        return bookings.stream()
+                .map(this::convertBookingToDTO)
+                .toList();
+    }
+
     public List<BookingDTO> getBookingByUserIdAndRoomId(String userId, String roomId) {
         List<Booking> bookings = bookingRepo.findByUserIdAndRoomId(userId, roomId);
-        if (bookings == null && bookings.isEmpty())    {
+        if (bookings == null || bookings.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No bookings found for user and room");
         }
         return bookings.stream()
@@ -481,6 +491,9 @@ public List<BookingDTO> createBooking(List<BookingDTO> bookingDTOS) {
     }
 
     private RoomDTO convertRoomToDTO(Room room) {
+
+        System.out.println("Converting room to DTO: " + room.getRoomNumber());
+
         return new RoomDTO(room.getId(),
                 room.getRoomNumber(),
                 room.getType().toString(),

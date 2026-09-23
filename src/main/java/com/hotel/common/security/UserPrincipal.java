@@ -16,6 +16,13 @@ public class UserPrincipal implements UserDetails {
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
 
+    public UserPrincipal(String id, Collection<? extends GrantedAuthority> authorities) {
+        this.id = id;
+        this.email = "";
+        this.password = "";
+        this.authorities = authorities;
+    }
+
     @Override
     public String getUsername() {
         return email;
