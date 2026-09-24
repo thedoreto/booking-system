@@ -42,7 +42,7 @@ public class GlobalKafkaConsumer {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    @KafkaListener(topics = "hotel-requests-topic", groupId = "hotel-backend-group")
+    @KafkaListener(topics = "hotel-requests-topic", groupId = "hotel-backend-${hotel.backend.id}")
     public void handleIncomingRequests(ConsumerRecord<String, String> record) { // Тук е String вместо Map
         String hotelIdKey = record.key();
 
@@ -52,6 +52,7 @@ public class GlobalKafkaConsumer {
         // 3. Филтриране: Проверяваме дали това съобщение е за този конкретен хотел бекенд
         // (Ако бекендът обслужва само един хотел, проверяваме дали съвпада с неговото ID)
         if (!currentHotelId.equals(hotelIdKey)) {
+            log.debug("Skipping Kafka message for hotelId={} (this backend is {})", hotelIdKey, currentHotelId);
             return; // Съобщението е за друг хотел, подминаваме го
         }
         try {
