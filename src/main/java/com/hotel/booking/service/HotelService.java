@@ -50,7 +50,8 @@ public List<BookingDTO> createBooking(List<BookingDTO> bookingDTOS) {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid booking");
     }
 
-    List<BookingDTO> createdBookings = new ArrayList<>();
+    // Първо проверяваме всички стаи и чак после записваме – или всички, или нито една
+    List<Booking> bookings = new ArrayList<>();
     for (BookingDTO bookingDTO : bookingDTOS) {
 
         String userId = bookingDTO.getUserId();
@@ -76,7 +77,11 @@ public List<BookingDTO> createBooking(List<BookingDTO> bookingDTOS) {
         Room room = roomRepo.findById(roomId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room not found"));
 
-        Booking booking = new Booking(userId, room, checkInDate.toString(), checkOutDate.toString());
+        bookings.add(new Booking(userId, room, checkInDate.toString(), checkOutDate.toString()));
+    }
+
+    List<BookingDTO> createdBookings = new ArrayList<>();
+    for (Booking booking : bookings) {
         bookingRepo.save(booking);
         createdBookings.add(convertBookingToDTO(booking));
     }

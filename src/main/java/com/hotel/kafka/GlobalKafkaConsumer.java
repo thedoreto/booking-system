@@ -18,6 +18,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -55,13 +56,15 @@ public class GlobalKafkaConsumer {
             log.debug("Skipping Kafka message for hotelId={} (this backend is {})", hotelIdKey, currentHotelId);
             return; // Съобщението е за друг хотел, подминаваме го
         }
+        String correlationId = null;
+        String replyTo = null;
         try {
             // Парсираме получения JSON стринг до Map
             Map<String, Object> payload = objectMapper.readValue(record.value(), Map.class);
 
             String event = (String) payload.get("event");
-            String correlationId = (String) payload.get("correlationId");
-            String replyTo = (String) payload.get("replyTo");
+            correlationId = (String) payload.get("correlationId");
+            replyTo = (String) payload.get("replyTo");
           //  String hotelId = (String) payload.get("hotelId");
 
             System.out.println("event: " + event);
@@ -107,10 +110,48 @@ public class GlobalKafkaConsumer {
                 );
 
                 kafkaTemplate.send(replyTo, correlationId, objectMapper.writeValueAsString(responseMap));
+            } else if ("create_booking".equals(event)) {
+                String userId = (String) payload.get("userId");
+                List<String> roomIds = (List<String>) payload.get("roomIds");
+                LocalDate startDate = LocalDate.parse((String) payload.get("startDate"));
+                LocalDate endDate = LocalDate.parse((String) payload.get("endDate"));
+
+                List<BookingDTO> requested = roomIds.stream()
+                        .map(roomId -> new BookingDTO(null, userId, null, roomId, null, null,
+                                startDate, endDate, 0, 0, null))
+                        .toList();
+                List<BookingDTO> created = hotelService.createBooking(requested);
+
+                Map<String, Object> responseMap = Map.of(
+                        "correlationId", correlationId,
+                        "data", created
+                );
+
+                kafkaTemplate.send(replyTo, correlationId, objectMapper.writeValueAsString(responseMap));
             }
         } catch (Exception e) {
             log.error("Error processing Kafka message", e);
             e.printStackTrace();
+            sendError(replyTo, correlationId, e);
+        }
+    }
+
+    // Връщаме грешката на изпращача, за да не чака до timeout
+    private void sendError(String replyTo, String correlationId, Exception e) {
+        if (replyTo == null || correlationId == null) {
+            return;
+        }
+        String message = e instanceof ResponseStatusException rse && rse.getReason() != null
+                ? rse.getReason()
+                : "Internal error";
+        try {
+            Map<String, Object> responseMap = Map.of(
+                    "correlationId", correlationId,
+                    "error", message
+            );
+            kafkaTemplate.send(replyTo, correlationId, objectMapper.writeValueAsString(responseMap));
+        } catch (Exception sendException) {
+            log.error("Failed to send error reply", sendException);
         }
     }
 }
