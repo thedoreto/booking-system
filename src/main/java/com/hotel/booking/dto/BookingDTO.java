@@ -53,10 +53,6 @@ public class BookingDTO {
     public void setCheckInDate(LocalDate checkInDate) {
         this.checkInDate = checkInDate;
     }
-    public LocalDate getCheckOuDate() { return checkOutDate;  }
-    public void setCheckOuDate(LocalDate checkOuDate) {
-        this.checkOutDate = checkOuDate;
-    }
     public long getNights() {
         return nights;
     }
