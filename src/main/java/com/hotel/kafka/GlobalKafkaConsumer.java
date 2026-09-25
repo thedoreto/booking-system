@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hotel.ai.service.AgentService;
 import com.hotel.booking.dto.BookingDTO;
 import com.hotel.booking.dto.RoomDTO;
+import com.hotel.booking.dto.RoomTypeDTO;
 import com.hotel.booking.service.HotelService;
 import com.hotel.common.security.UserPrincipal;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -85,6 +86,15 @@ public class GlobalKafkaConsumer {
                 String jsonResponse = objectMapper.writeValueAsString(responseMap);
 
                 kafkaTemplate.send(replyTo, correlationId, jsonResponse);
+            } else if ("get_room_types".equals(event)) {
+                List<RoomTypeDTO> roomTypes = hotelService.getRoomTypes();
+
+                Map<String, Object> responseMap = Map.of(
+                        "correlationId", correlationId,
+                        "data", roomTypes
+                );
+
+                kafkaTemplate.send(replyTo, correlationId, objectMapper.writeValueAsString(responseMap));
             } else if ("get_reservations".equals(event)) {
                 String userId = (String) payload.get("userId");
 
@@ -99,10 +109,11 @@ public class GlobalKafkaConsumer {
             } else if ("get_available_rooms_by_dates".equals(event)) {
                 LocalDate startDate = LocalDate.parse((String) payload.get("startDate"));
                 LocalDate endDate = LocalDate.parse((String) payload.get("endDate"));
+                String roomType = (String) payload.get("roomType"); // по избор
 
-                System.out.println("startDate: " + startDate + ", endDate: " + endDate);
+                System.out.println("startDate: " + startDate + ", endDate: " + endDate + ", roomType: " + roomType);
 
-                List<RoomDTO> availableRooms = hotelService.findAvailableRooms(startDate, endDate);
+                List<RoomDTO> availableRooms = hotelService.findAvailableRooms(startDate, endDate, roomType);
 
                 Map<String, Object> responseMap = Map.of(
                         "correlationId", correlationId,

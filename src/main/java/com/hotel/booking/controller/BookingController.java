@@ -4,6 +4,7 @@ import com.hotel.booking.dto.BookingDTO;
 import com.hotel.booking.dto.UserDTO;
 import com.hotel.booking.dto.ImageDTO;
 import com.hotel.booking.dto.RoomDTO;
+import com.hotel.booking.dto.RoomTypeDTO;
 import com.hotel.booking.model.User;
 import com.hotel.booking.model.Room;
 import com.hotel.booking.service.HotelService;
@@ -42,10 +43,11 @@ public class BookingController {
     }
 
     @GetMapping("/rooms/available")
-    public ResponseEntity<List<RoomDTO>> getAvailableRooms(@RequestParam String checkInDate, @RequestParam String checkOutDate) {
+    public ResponseEntity<List<RoomDTO>> getAvailableRooms(@RequestParam String checkInDate, @RequestParam String checkOutDate,
+                                                           @RequestParam(required = false) String roomType) {
         LocalDate checkIn = LocalDate.parse(checkInDate);
         LocalDate checkOut = LocalDate.parse(checkOutDate);
-        return ResponseEntity.ok(hotelService.findAvailableRooms(checkIn, checkOut));
+        return ResponseEntity.ok(hotelService.findAvailableRooms(checkIn, checkOut, roomType));
     }
 
     @GetMapping("/home")
@@ -64,6 +66,12 @@ public class BookingController {
     @GetMapping("/rooms")
     public ResponseEntity<List<RoomDTO>> getAll() {
         return ResponseEntity.ok(hotelService.getAllRooms());
+    }
+
+    //get room types that the hotel has (code + name)
+    @GetMapping("/rooms/types")
+    public ResponseEntity<List<RoomTypeDTO>> getRoomTypes() {
+        return ResponseEntity.ok(hotelService.getRoomTypes());
     }
 
     //get room by id

@@ -3,6 +3,7 @@ package com.hotel.booking.service;
 import com.hotel.booking.dto.BookingDTO;
 import com.hotel.booking.dto.ImageDTO;
 import com.hotel.booking.dto.RoomDTO;
+import com.hotel.booking.dto.RoomTypeDTO;
 import com.hotel.booking.dto.UserDTO;
 import com.hotel.booking.model.*;
 import com.hotel.booking.model.enums.BookingStatus;
@@ -181,6 +182,17 @@ public List<BookingDTO> createBooking(List<BookingDTO> bookingDTOS) {
                 .toList();
     }
 
+    // Типовете стаи, които хотелът реално има, в реда на RoomType
+    public List<RoomTypeDTO> getRoomTypes() {
+        return roomRepo.findAll().stream()
+                .map(Room::getType)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .map(type -> new RoomTypeDTO(type.name(), type.getDisplayName()))
+                .toList();
+    }
+
     public Optional<RoomDTO> getRoomById(String id) {
         Optional<Room> roomOpt = roomRepo.findById(id);
         if (roomOpt.isEmpty()) {
@@ -190,11 +202,21 @@ public List<BookingDTO> createBooking(List<BookingDTO> bookingDTOS) {
     }
 
     public List<RoomDTO> findAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate) {
+        return findAvailableRooms(checkInDate, checkOutDate, null);
+    }
+
+    // roomType (SINGLE / DOUBLE / APARTMENT) е по избор – null или празен връща всички типове
+    public List<RoomDTO> findAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate, String roomType) {
         if (!ValidationUtil.isValidPeriod(checkInDate, checkOutDate)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid dates");
         }
+        boolean filterByType = roomType != null && !roomType.isBlank();
+        if (filterByType && !ValidationUtil.isValidRoomType(roomType)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid room type");
+        }
 
         return roomRepo.findAll().stream()
+                .filter(room -> !filterByType || room.getType() == RoomType.valueOf(roomType))
                 .filter(room -> isRoomAvailable(room.getId(), checkInDate, checkOutDate))
                 .map(this::convertRoomToDTO).toList();
     }
