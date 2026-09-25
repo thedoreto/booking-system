@@ -91,18 +91,48 @@ public List<BookingDTO> createBooking(List<BookingDTO> bookingDTOS) {
 
 
 
-    public BookingDTO cancelBooking(String bookingId) {
-        Optional<Booking> bookingOpt = bookingRepo.findById(bookingId);
-        if (bookingOpt.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking not found");
+    // Админ отказва всяка резервация; потребител – само своя и най-късно в деня преди настаняването
+    public BookingDTO cancelBooking(String bookingId, Authentication auth) {
+        UserPrincipal user = (UserPrincipal) auth.getPrincipal();
+        boolean isAdmin = user.getAuthorities().contains(new SimpleGrantedAuthority("ADMIN"));
+        return isAdmin ? cancelBooking(bookingId) : cancelBooking(bookingId, user.getId());
+    }
+
+    public BookingDTO cancelBooking(String bookingId, String userId) {
+        Booking booking = bookingRepo.findById(bookingId)
+                .filter(b -> b.getUserId() != null && b.getUserId().equals(userId))
+                // Чужда резервация – същата грешка като липсваща, за да не се издава, че съществува
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking not found"));
+        if (!booking.getCheckInDate().isAfter(LocalDate.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cancellation deadline passed");
         }
-         Booking booking = bookingOpt.get();
+        return cancel(booking);
+    }
+
+    private BookingDTO cancelBooking(String bookingId) {
+        Booking booking = bookingRepo.findById(bookingId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking not found"));
+        return cancel(booking);
+    }
+
+    private BookingDTO cancel(Booking booking) {
         if (booking.getStatus() == BookingStatus.CANCELED) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking is already canceled");
         }
         booking.setStatus(BookingStatus.CANCELED);
         bookingRepo.save(booking);
         return convertBookingToDTO(booking);
+    }
+
+    // Потвърдените резервации на потребителя с настаняване от днес нататък, по дата на настаняване.
+    // Празен списък, ако няма (не грешка).
+    public List<BookingDTO> getUpcomingBookings(String userId) {
+        return bookingRepo.findByUserIdAndCheckInDateGreaterThanEqualAndStatus(
+                        userId, LocalDate.now(), BookingStatus.CONFIRMED)
+                .stream()
+                .sorted(Comparator.comparing(Booking::getCheckInDate))
+                .map(this::convertBookingToDTO)
+                .toList();
     }
 
     public List<BookingDTO> getBookingByUserId(String userId) {

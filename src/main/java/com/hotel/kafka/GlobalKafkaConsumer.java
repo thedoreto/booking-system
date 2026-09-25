@@ -1,6 +1,7 @@
 package com.hotel.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.hotel.ai.service.AgentService;
 import com.hotel.booking.dto.BookingDTO;
 import com.hotel.booking.dto.RoomDTO;
@@ -31,8 +32,10 @@ public class GlobalKafkaConsumer {
 
     private final HotelService hotelService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    // Датите излизат като "2026-09-30", не като масив [2026,9,30]
     private final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());// За парсиране на JSON стринга
+            .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     @Value("${hotel.backend.id}")
     private String currentHotelId;
@@ -86,6 +89,29 @@ public class GlobalKafkaConsumer {
                 String jsonResponse = objectMapper.writeValueAsString(responseMap);
 
                 kafkaTemplate.send(replyTo, correlationId, jsonResponse);
+            } else if ("get_upcoming_bookings".equals(event)) {
+                String userId = (String) payload.get("userId");
+
+                List<BookingDTO> bookings = hotelService.getUpcomingBookings(userId);
+
+                Map<String, Object> responseMap = Map.of(
+                        "correlationId", correlationId,
+                        "data", bookings
+                );
+
+                kafkaTemplate.send(replyTo, correlationId, objectMapper.writeValueAsString(responseMap));
+            } else if ("cancel_booking".equals(event)) {
+                String userId = (String) payload.get("userId");
+                String bookingId = (String) payload.get("bookingId");
+
+                BookingDTO canceled = hotelService.cancelBooking(bookingId, userId);
+
+                Map<String, Object> responseMap = Map.of(
+                        "correlationId", correlationId,
+                        "data", canceled
+                );
+
+                kafkaTemplate.send(replyTo, correlationId, objectMapper.writeValueAsString(responseMap));
             } else if ("get_room_types".equals(event)) {
                 List<RoomTypeDTO> roomTypes = hotelService.getRoomTypes();
 

@@ -196,8 +196,8 @@ public class BookingController {
 
     /*PUT /bookings/{id}/cancel*/
     @PutMapping("/bookings/{id}/cancel")
-    public ResponseEntity<BookingDTO> cancelBooking(@PathVariable String id) {
-        return ResponseEntity.ok(hotelService.cancelBooking(id));
+    public ResponseEntity<BookingDTO> cancelBooking(@PathVariable String id, Authentication authentication) {
+        return ResponseEntity.ok(hotelService.cancelBooking(id, authentication));
     }
 
      @GetMapping("/bookings")
