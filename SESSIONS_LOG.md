@@ -2,6 +2,29 @@
 
 Пълният лог на сесиите (вкл. booking-ai и booking-ui) е в `../booking-ai/SESSIONS_LOG.md`. Тук е само частта за booking-system.
 
+## Сесия 2026-09-25 (3) – без промени в кода
+
+- booking-system не е променян: снимките на стаите в чата ползват съществуващия `GET /images`, а логовете по действия са изцяло в booking-ai и booking-ui.
+- `CLAUDE.md`: нов раздел „Working with the user“ – без задачи и бележки за ръчни проверки (тест в браузъра, Atlas, след deploy). Потребителката сама чете кода и тества локално и в Render. Подробно в `../booking-ai/SESSIONS_LOG.md`.
+
+## Сесия 2026-09-25 – търсене по тип стая
+
+### Направени commit-и
+| Commit | Какво |
+|---|---|
+| `f959b41` | `HotelService.findAvailableRooms(checkIn, checkOut, roomType)`: `roomType` не е задължителен (null или празен = всички), непознат тип → 400 `Invalid room type`. `GET /rooms/available?roomType=`. `getRoomTypes()` връща типовете, които хотелът реално има, в реда на enum-а → `GET /rooms/types` и Kafka `get_room_types`. `RoomType` има `displayName` (Единична стая, Двойна стая, Апартамент). Нов `RoomTypeDTO(code, name)`. |
+
+**Типовете стаи и имената им се пазят само тук.** booking-ai и booking-ui ги взимат от бекенда (booking-ai ги кешира за 10 минути). Нов тип = нова стойност в `RoomType` с `displayName`.
+
+### Kafka events (промени)
+| event | вход | `data` в отговора |
+|---|---|---|
+| `get_available_rooms_by_dates` | `startDate`, `endDate`, `roomType?` | `[RoomDTO]` или `error`: `Invalid dates`, `Invalid room type` |
+| `get_room_types` | – | `[{code, name}]` |
+
+### Деплой
+booking-system трябва да е deploy-нат **преди** booking-ai, и двете копия: локално (40_robbers) и Render (seven_stars).
+
 ## Сесия 2026-09-24 (2) – резервация от чата през Kafka
 
 ### Контекст

@@ -18,6 +18,9 @@ There is currently no `src/test` directory, so `mvn test` runs nothing. The Dock
 
 The app will not start without access to the MongoDB URI and the Aiven Kafka cluster configured in `application.properties`. `KafkaCertInitializer` also fails startup if any of `certs/ca.pem`, `certs/aiven-keystore.p12` or `certs/aiven-truststore.p12` is missing from the classpath.
 
+## Working with the user
+- **Manual checks:** the user reads the code and tests locally and on Render herself before accepting changes. Do not add tasks or notes like "test in the browser", "check in Atlas", "check/delete after deploy" or "not tested in the browser" – not in replies, not in `SESSIONS_LOG.md` or `../booking-ai/PLAN.md`. Only say what you checked yourself (compile, unit tests, build).
+
 ## Architecture
 
 Everything lives under `com.hotel`, split into feature packages:
