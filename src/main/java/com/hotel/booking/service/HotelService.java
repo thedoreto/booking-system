@@ -127,12 +127,12 @@ public List<BookingDTO> createBooking(List<BookingDTO> bookingDTOS) {
     // Потвърдените резервации на потребителя с настаняване от днес нататък, по дата на настаняване.
     // Празен списък, ако няма (не грешка).
     public List<BookingDTO> getUpcomingBookings(String userId) {
-        return bookingRepo.findByUserIdAndCheckInDateGreaterThanEqualAndStatus(
+        List<Booking> bookings = bookingRepo.findByUserIdAndCheckInDateGreaterThanEqualAndStatus(
                         userId, LocalDate.now(), BookingStatus.CONFIRMED)
                 .stream()
                 .sorted(Comparator.comparing(Booking::getCheckInDate))
-                .map(this::convertBookingToDTO)
                 .toList();
+        return convertBookingsToDTOs(bookings);
     }
 
     public List<BookingDTO> getBookingByUserId(String userId) {
@@ -527,13 +527,42 @@ public List<BookingDTO> createBooking(List<BookingDTO> bookingDTOS) {
         if (roomOpt.isEmpty())  {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Room not found for booking");
         }
-        Room room = roomOpt.get();
         Optional<User> userOpt = userRepo.findById(booking.getUserId());
         if (userOpt.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "User not found for booking");
         }
-        User user = userOpt.get();
+        return convertBookingToDTO(booking, roomOpt.get(), userOpt.get());
+    }
 
+    // Като convertBookingToDTO, но стаите и потребителите се зареждат с по една заявка за целия списък,
+    // а не с по две заявки за всяка резервация
+    private List<BookingDTO> convertBookingsToDTOs(List<Booking> bookings) {
+        if (bookings.isEmpty()) {
+            return List.of();
+        }
+        Map<String, Room> rooms = new HashMap<>();
+        roomRepo.findAllById(bookings.stream().map(Booking::getRoomId).distinct().toList())
+                .forEach(room -> rooms.put(room.getId(), room));
+        Map<String, User> users = new HashMap<>();
+        userRepo.findAllById(bookings.stream().map(Booking::getUserId).distinct().toList())
+                .forEach(user -> users.put(user.getId(), user));
+
+        return bookings.stream()
+                .map(booking -> {
+                    Room room = rooms.get(booking.getRoomId());
+                    if (room == null) {
+                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Room not found for booking");
+                    }
+                    User user = users.get(booking.getUserId());
+                    if (user == null) {
+                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "User not found for booking");
+                    }
+                    return convertBookingToDTO(booking, room, user);
+                })
+                .toList();
+    }
+
+    private BookingDTO convertBookingToDTO(Booking booking, Room room, User user) {
         return new BookingDTO(booking.getId(),
                 user.getId(),
                 user.getName(),

@@ -33,7 +33,7 @@ public class Booking {
         this.roomId = room.getId();
         this.checkInDate = LocalDate.parse(checkInDate);
         this.checkOutDate = LocalDate.parse(checkOutDate);
-        this.nights = ChronoUnit.DAYS.between(this.checkOutDate, this.checkInDate);
+        this.nights = ChronoUnit.DAYS.between(this.checkInDate, this.checkOutDate);
         this.totalPrice = calculateTotalPrice(room, nights);
         this.status = BookingStatus.CONFIRMED;
     }
