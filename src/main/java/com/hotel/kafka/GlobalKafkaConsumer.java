@@ -6,6 +6,7 @@ import com.hotel.ai.service.AgentService;
 import com.hotel.booking.dto.BookingDTO;
 import com.hotel.booking.dto.RoomDTO;
 import com.hotel.booking.dto.RoomTypeDTO;
+import com.hotel.booking.dto.RoomWithImagesDTO;
 import com.hotel.booking.service.HotelService;
 import com.hotel.common.security.JwtService;
 import com.hotel.common.security.UserPrincipal;
@@ -166,7 +167,8 @@ public class GlobalKafkaConsumer {
 
                 System.out.println("startDate: " + startDate + ", endDate: " + endDate + ", roomType: " + roomType);
 
-                List<RoomDTO> availableRooms = hotelService.findAvailableRooms(startDate, endDate, roomType);
+                // Със снимките – чатът ги показва, без да вика booking-system
+                List<RoomWithImagesDTO> availableRooms = hotelService.findAvailableRoomsWithImages(startDate, endDate, roomType);
 
                 Map<String, Object> responseMap = Map.of(
                         "correlationId", correlationId,

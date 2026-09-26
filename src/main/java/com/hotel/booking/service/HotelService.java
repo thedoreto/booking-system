@@ -4,6 +4,7 @@ import com.hotel.booking.dto.BookingDTO;
 import com.hotel.booking.dto.ImageDTO;
 import com.hotel.booking.dto.RoomDTO;
 import com.hotel.booking.dto.RoomTypeDTO;
+import com.hotel.booking.dto.RoomWithImagesDTO;
 import com.hotel.booking.dto.UserDTO;
 import com.hotel.booking.model.*;
 import com.hotel.booking.model.enums.BookingStatus;
@@ -249,6 +250,32 @@ public List<BookingDTO> createBooking(List<BookingDTO> bookingDTOS) {
                 .filter(room -> !filterByType || room.getType() == RoomType.valueOf(roomType))
                 .filter(room -> isRoomAvailable(room.getId(), checkInDate, checkOutDate))
                 .map(this::convertRoomToDTO).toList();
+    }
+
+    // Свободните стаи със снимките им – за чата (Kafka). Всички снимки се четат с една заявка;
+    // изтрита снимка се пропуска.
+    public List<RoomWithImagesDTO> findAvailableRoomsWithImages(LocalDate checkInDate, LocalDate checkOutDate,
+                                                                String roomType) {
+        List<RoomDTO> rooms = findAvailableRooms(checkInDate, checkOutDate, roomType);
+        Set<String> imageIds = new HashSet<>();
+        for (RoomDTO room : rooms) {
+            if (room.getImageIds() != null) {
+                imageIds.addAll(room.getImageIds());
+            }
+        }
+        Map<String, ImageDTO> imagesById = new HashMap<>();
+        for (Image image : imageRepo.findAllById(imageIds)) {
+            imagesById.put(image.getId(), convertImageToDTO(image));
+        }
+
+        return rooms.stream()
+                .map(room -> new RoomWithImagesDTO(room.getId(), room.getRoomNumber(), room.getType(),
+                        room.getPricePerNight(),
+                        (room.getImageIds() != null ? room.getImageIds() : List.<String>of()).stream()
+                                .map(imagesById::get)
+                                .filter(Objects::nonNull)
+                                .toList()))
+                .toList();
     }
 
     public List<UserDTO> findAllUsers() {
