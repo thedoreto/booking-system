@@ -7,11 +7,15 @@ import com.hotel.booking.dto.BookingDTO;
 import com.hotel.booking.dto.RoomDTO;
 import com.hotel.booking.dto.RoomTypeDTO;
 import com.hotel.booking.service.HotelService;
+import com.hotel.common.security.JwtService;
 import com.hotel.common.security.UserPrincipal;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,6 +36,7 @@ public class GlobalKafkaConsumer {
 
     private final HotelService hotelService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final JwtService jwtService;
     // Датите излизат като "2026-09-30", не като масив [2026,9,30]
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
@@ -42,9 +47,31 @@ public class GlobalKafkaConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalKafkaConsumer.class);
 
-    public GlobalKafkaConsumer(HotelService hotelService, KafkaTemplate<String, Object> kafkaTemplate) {
+    public GlobalKafkaConsumer(HotelService hotelService, KafkaTemplate<String, Object> kafkaTemplate,
+                               JwtService jwtService) {
         this.hotelService = hotelService;
         this.kafkaTemplate = kafkaTemplate;
+        this.jwtService = jwtService;
+    }
+
+    // Потребителят е този от JWT-то в заявката (подписано от този бекенд), не userId от заявката –
+    // така AI асистентът не може да действа от чуждо име
+    private String userIdFromToken(Map<String, Object> payload) {
+        if (!(payload.get("token") instanceof String token) || token.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Login required");
+        }
+        String userId;
+        try {
+            userId = jwtService.extractClaims(token).get("userId", String.class);
+        } catch (ExpiredJwtException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Session expired");
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
+        }
+        if (userId == null || userId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
+        }
+        return userId;
     }
 
     @KafkaListener(topics = "hotel-requests-topic", groupId = "hotel-backend-${hotel.backend.id}")
@@ -90,7 +117,7 @@ public class GlobalKafkaConsumer {
 
                 kafkaTemplate.send(replyTo, correlationId, jsonResponse);
             } else if ("get_upcoming_bookings".equals(event)) {
-                String userId = (String) payload.get("userId");
+                String userId = userIdFromToken(payload);
 
                 List<BookingDTO> bookings = hotelService.getUpcomingBookings(userId);
 
@@ -101,7 +128,7 @@ public class GlobalKafkaConsumer {
 
                 kafkaTemplate.send(replyTo, correlationId, objectMapper.writeValueAsString(responseMap));
             } else if ("cancel_booking".equals(event)) {
-                String userId = (String) payload.get("userId");
+                String userId = userIdFromToken(payload);
                 String bookingId = (String) payload.get("bookingId");
 
                 BookingDTO canceled = hotelService.cancelBooking(bookingId, userId);
@@ -122,7 +149,7 @@ public class GlobalKafkaConsumer {
 
                 kafkaTemplate.send(replyTo, correlationId, objectMapper.writeValueAsString(responseMap));
             } else if ("get_reservations".equals(event)) {
-                String userId = (String) payload.get("userId");
+                String userId = userIdFromToken(payload);
 
                 List<BookingDTO> reservations = hotelService.getBookingByUserId(userId);
 
@@ -148,7 +175,7 @@ public class GlobalKafkaConsumer {
 
                 kafkaTemplate.send(replyTo, correlationId, objectMapper.writeValueAsString(responseMap));
             } else if ("create_booking".equals(event)) {
-                String userId = (String) payload.get("userId");
+                String userId = userIdFromToken(payload);
                 List<String> roomIds = (List<String>) payload.get("roomIds");
                 LocalDate startDate = LocalDate.parse((String) payload.get("startDate"));
                 LocalDate endDate = LocalDate.parse((String) payload.get("endDate"));
