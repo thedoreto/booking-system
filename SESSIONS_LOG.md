@@ -2,6 +2,19 @@
 
 Пълният лог на сесиите (вкл. booking-ai и booking-ui) е в `../booking-ai/SESSIONS_LOG.md`. Тук е само частта за booking-system.
 
+## Сесия 2026-09-26 – публично четене, JWT в Kafka, снимки в Kafka отговора
+
+Пълното описание е в `../booking-ai/SESSIONS_LOG.md`.
+
+| Commit | Какво |
+|---|---|
+| `078a378` | `SecurityConfig`: `GET /hotelinfo`, `GET /rooms/**`, `GET /images/**` → `permitAll()` (гостът разглежда сайта); записът иска вход |
+| `fc0ced6` | `GlobalKafkaConsumer.userIdFromToken`: `create_booking`, `get_upcoming_bookings`, `cancel_booking`, `get_reservations` взимат потребителя от JWT-то в заявката (подписът се проверява с `jwt.secret`); `userId` от заявката не се чете. Откази: `Login required`, `Invalid token`, `Session expired` |
+| `1b8d8e6` | `get_available_rooms_by_dates` връща `RoomWithImagesDTO` със `images: [{id, url, title}]` (`HotelService.findAvailableRoomsWithImages`, една заявка за снимките); REST не е променен |
+
+- Първите тестове в проекта: `GlobalKafkaConsumerTest` (4), `HotelServiceImagesTest` (1). Surefire плъгинът беше свален веднъж онлайн; после `mvn -o test` работи.
+- Архитектурните правила са в `CLAUDE.md`.
+
 ## Сесия 2026-09-25 (3) – без промени в кода
 
 - booking-system не е променян: снимките на стаите в чата ползват съществуващия `GET /images`, а логовете по действия са изцяло в booking-ai и booking-ui.
