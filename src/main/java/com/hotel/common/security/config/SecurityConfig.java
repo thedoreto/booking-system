@@ -45,6 +45,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // 🔥 PUBLIC endpoints (трябва да са тук)
+                        // Анонимният гост вижда информацията за хотела, стаите и снимките – само четене
+                        .requestMatchers(HttpMethod.GET, "/hotelinfo", "/rooms/**", "/images/**").permitAll()
+
                         .requestMatchers("/rooms/**").authenticated()
                         .requestMatchers("/images/**").authenticated()
                         .requestMatchers("/bookings/**").authenticated()
