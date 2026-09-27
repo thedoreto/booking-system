@@ -3,15 +3,16 @@ package com.hotel.kafka;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hotel.booking.service.HotelService;
 import com.hotel.common.security.JwtService;
+import com.hotel.common.security.JwtTestKeys;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.security.KeyPair;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -28,12 +29,12 @@ import static org.mockito.Mockito.when;
 class GlobalKafkaConsumerTest {
 
     private static final String HOTEL = "seven_stars";
-    private static final String SECRET = "test-secret-test-secret-test-secret-123";
+    private static final KeyPair KEYS = JwtTestKeys.generate();
 
     private final HotelService hotelService = mock(HotelService.class);
     @SuppressWarnings("unchecked")
     private final KafkaTemplate<String, Object> kafkaTemplate = mock(KafkaTemplate.class);
-    private final JwtService jwtService = new JwtService(SECRET);
+    private final JwtService jwtService = JwtTestKeys.jwtService(KEYS);
     private final GlobalKafkaConsumer consumer = new GlobalKafkaConsumer(hotelService, kafkaTemplate, jwtService);
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -66,7 +67,7 @@ class GlobalKafkaConsumerTest {
         String forged = Jwts.builder()
                 .claim("userId", "user-1")
                 .setExpiration(new Date(System.currentTimeMillis() + 60_000))
-                .signWith(Keys.hmacShaKeyFor("another-secret-another-secret-another-1".getBytes()), SignatureAlgorithm.HS256)
+                .signWith(JwtTestKeys.generate().getPrivate(), SignatureAlgorithm.RS256)
                 .compact();
 
         send(Map.of("event", "get_reservations", "token", forged));
@@ -80,7 +81,7 @@ class GlobalKafkaConsumerTest {
         String expired = Jwts.builder()
                 .claim("userId", "user-1")
                 .setExpiration(new Date(System.currentTimeMillis() - 60_000))
-                .signWith(Keys.hmacShaKeyFor(SECRET.getBytes()), SignatureAlgorithm.HS256)
+                .signWith(KEYS.getPrivate(), SignatureAlgorithm.RS256)
                 .compact();
 
         send(Map.of("event", "create_booking", "token", expired,
