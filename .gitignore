@@ -36,3 +36,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
+### Ключове и други тайни – само локално, никога в git ###
+secrets/
+src/main/resources/application.properties
