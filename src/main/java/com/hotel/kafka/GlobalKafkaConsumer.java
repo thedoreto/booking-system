@@ -75,7 +75,9 @@ public class GlobalKafkaConsumer {
         return userId;
     }
 
-    @KafkaListener(topics = "hotel-requests-topic", groupId = "hotel-backend-${hotel.backend.id}")
+    // Всеки хотел има свои топици: заявките за него – в hotel-requests-<hotelId>, отговорите – в hotel-replies-<hotelId>.
+    // Отговаряме само в своя топик, никога в топик, посочен от заявката.
+    @KafkaListener(topics = "hotel-requests-${hotel.backend.id}", groupId = "hotel-backend-${hotel.backend.id}")
     public void handleIncomingRequests(ConsumerRecord<String, String> record) { // Тук е String вместо Map
         String hotelIdKey = record.key();
 
@@ -89,19 +91,16 @@ public class GlobalKafkaConsumer {
             return; // Съобщението е за друг хотел, подминаваме го
         }
         String correlationId = null;
-        String replyTo = null;
         try {
             // Парсираме получения JSON стринг до Map
             Map<String, Object> payload = objectMapper.readValue(record.value(), Map.class);
 
             String event = (String) payload.get("event");
             correlationId = (String) payload.get("correlationId");
-            replyTo = (String) payload.get("replyTo");
           //  String hotelId = (String) payload.get("hotelId");
 
             System.out.println("event: " + event);
             System.out.println("correlationId: " + correlationId);
-            System.out.println("replyTo: " + replyTo);
          //   System.out.println("hotelId: " + hotelId);
 
             if ("get_all_rooms".equals(event)) {
@@ -116,7 +115,7 @@ public class GlobalKafkaConsumer {
                 // Превръщаме Map-а в JSON стринг, за да може StringSerializer да го прати успешно
                 String jsonResponse = objectMapper.writeValueAsString(responseMap);
 
-                kafkaTemplate.send(replyTo, correlationId, jsonResponse);
+                kafkaTemplate.send(replyTopic(), correlationId, jsonResponse);
             } else if ("get_upcoming_bookings".equals(event)) {
                 String userId = userIdFromToken(payload);
 
@@ -127,7 +126,7 @@ public class GlobalKafkaConsumer {
                         "data", bookings
                 );
 
-                kafkaTemplate.send(replyTo, correlationId, objectMapper.writeValueAsString(responseMap));
+                kafkaTemplate.send(replyTopic(), correlationId, objectMapper.writeValueAsString(responseMap));
             } else if ("cancel_booking".equals(event)) {
                 String userId = userIdFromToken(payload);
                 String bookingId = (String) payload.get("bookingId");
@@ -139,7 +138,7 @@ public class GlobalKafkaConsumer {
                         "data", canceled
                 );
 
-                kafkaTemplate.send(replyTo, correlationId, objectMapper.writeValueAsString(responseMap));
+                kafkaTemplate.send(replyTopic(), correlationId, objectMapper.writeValueAsString(responseMap));
             } else if ("get_room_types".equals(event)) {
                 List<RoomTypeDTO> roomTypes = hotelService.getRoomTypes();
 
@@ -148,7 +147,7 @@ public class GlobalKafkaConsumer {
                         "data", roomTypes
                 );
 
-                kafkaTemplate.send(replyTo, correlationId, objectMapper.writeValueAsString(responseMap));
+                kafkaTemplate.send(replyTopic(), correlationId, objectMapper.writeValueAsString(responseMap));
             } else if ("get_reservations".equals(event)) {
                 String userId = userIdFromToken(payload);
 
@@ -159,7 +158,7 @@ public class GlobalKafkaConsumer {
                         "data", reservations
                 );
 
-                kafkaTemplate.send(replyTo, correlationId, objectMapper.writeValueAsString(responseMap));
+                kafkaTemplate.send(replyTopic(), correlationId, objectMapper.writeValueAsString(responseMap));
             } else if ("get_available_rooms_by_dates".equals(event)) {
                 LocalDate startDate = LocalDate.parse((String) payload.get("startDate"));
                 LocalDate endDate = LocalDate.parse((String) payload.get("endDate"));
@@ -175,7 +174,7 @@ public class GlobalKafkaConsumer {
                         "data", availableRooms
                 );
 
-                kafkaTemplate.send(replyTo, correlationId, objectMapper.writeValueAsString(responseMap));
+                kafkaTemplate.send(replyTopic(), correlationId, objectMapper.writeValueAsString(responseMap));
             } else if ("create_booking".equals(event)) {
                 String userId = userIdFromToken(payload);
                 List<String> roomIds = (List<String>) payload.get("roomIds");
@@ -193,18 +192,23 @@ public class GlobalKafkaConsumer {
                         "data", created
                 );
 
-                kafkaTemplate.send(replyTo, correlationId, objectMapper.writeValueAsString(responseMap));
+                kafkaTemplate.send(replyTopic(), correlationId, objectMapper.writeValueAsString(responseMap));
             }
         } catch (Exception e) {
             log.error("Error processing Kafka message", e);
             e.printStackTrace();
-            sendError(replyTo, correlationId, e);
+            sendError(correlationId, e);
         }
     }
 
+    // Топикът за отговорите на този хотел
+    private String replyTopic() {
+        return "hotel-replies-" + currentHotelId;
+    }
+
     // Връщаме грешката на изпращача, за да не чака до timeout
-    private void sendError(String replyTo, String correlationId, Exception e) {
-        if (replyTo == null || correlationId == null) {
+    private void sendError(String correlationId, Exception e) {
+        if (correlationId == null) {
             return;
         }
         String message = e instanceof ResponseStatusException rse && rse.getReason() != null
@@ -215,7 +219,7 @@ public class GlobalKafkaConsumer {
                     "correlationId", correlationId,
                     "error", message
             );
-            kafkaTemplate.send(replyTo, correlationId, objectMapper.writeValueAsString(responseMap));
+            kafkaTemplate.send(replyTopic(), correlationId, objectMapper.writeValueAsString(responseMap));
         } catch (Exception sendException) {
             log.error("Failed to send error reply", sendException);
         }

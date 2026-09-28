@@ -91,18 +91,38 @@ class GlobalKafkaConsumerTest {
         assertThat(reply()).containsEntry("error", "Session expired");
     }
 
+    @Test
+    void repliesOnlyInItsOwnTopicWhateverTheRequestSays() throws Exception {
+        when(hotelService.getRoomTypes()).thenReturn(List.of());
+
+        send(Map.of("event", "get_room_types", "replyTo", "hotel-replies-40_robbers"));
+
+        assertThat(reply()).containsKey("data");
+        verify(kafkaTemplate, never()).send(org.mockito.ArgumentMatchers.eq("hotel-replies-40_robbers"),
+                anyString(), org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void requestForAnotherHotelIsSkipped() throws Exception {
+        consumer.handleIncomingRequests(new ConsumerRecord<>("hotel-requests-" + HOTEL, 0, 0, "40_robbers",
+                objectMapper.writeValueAsString(Map.of("event", "get_room_types", "correlationId", "c-1"))));
+
+        verify(hotelService, never()).getRoomTypes();
+        verify(kafkaTemplate, never()).send(anyString(), anyString(), org.mockito.ArgumentMatchers.any());
+    }
+
     private void send(Map<String, Object> request) throws Exception {
         Map<String, Object> payload = new HashMap<>(request);
         payload.put("correlationId", "c-1");
-        payload.put("replyTo", "hotel-replies-topic");
-        consumer.handleIncomingRequests(new ConsumerRecord<>("hotel-requests-topic", 0, 0, HOTEL,
+        consumer.handleIncomingRequests(new ConsumerRecord<>("hotel-requests-" + HOTEL, 0, 0, HOTEL,
                 objectMapper.writeValueAsString(payload)));
     }
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> reply() throws Exception {
         ArgumentCaptor<Object> message = ArgumentCaptor.forClass(Object.class);
-        verify(kafkaTemplate).send(org.mockito.ArgumentMatchers.eq("hotel-replies-topic"),
+        // Отговорът – винаги в топика на този хотел
+        verify(kafkaTemplate).send(org.mockito.ArgumentMatchers.eq("hotel-replies-" + HOTEL),
                 org.mockito.ArgumentMatchers.eq("c-1"), message.capture());
         return objectMapper.readValue((String) message.getValue(), Map.class);
     }
