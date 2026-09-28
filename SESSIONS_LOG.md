@@ -2,6 +2,15 @@
 
 Пълният лог на сесиите (вкл. booking-ai и booking-ui) е в `../booking-ai/SESSIONS_LOG.md`. Тук е само частта за booking-system.
 
+## Сесия 2026-09-28 – топици по хотел в Kafka (не е комитнато)
+
+Пълното описание – в `../booking-ai/SESSIONS_LOG.md`.
+
+- `GlobalKafkaConsumer` слуша `hotel-requests-${hotel.backend.id}` и отговаря само в `hotel-replies-<hotelId>` (`replyTopic()`); `replyTo` от заявката не се чете; филтърът по ключ остава.
+- `GlobalKafkaConsumerTest` (+2): `replyTo` на друг хотел се игнорира; заявка с ключ на друг хотел се пропуска.
+- `CLAUDE.md` – новите топици.
+- Проверено: `mvn -o test -Dtest='GlobalKafkaConsumerTest,HotelServiceImagesTest,JwtServiceTest'` (16).
+
 ## Сесия 2026-09-26 – публично четене, JWT в Kafka, снимки в Kafka отговора
 
 Пълното описание е в `../booking-ai/SESSIONS_LOG.md`.
